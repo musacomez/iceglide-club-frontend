@@ -9,8 +9,8 @@ export function toISODate(d: Date): string {
 }
 
 export function parseISODate(s: string): Date {
-  const [y, m, d] = s.split('-').map(Number);
-  return new Date(y, (m ?? 1) - 1, d ?? 1);
+  const [y = 0, m = 1, d = 1] = s.split('-').map(Number);
+  return new Date(y, m - 1, d);
 }
 
 export function startOfWeek(d: Date): Date {
@@ -55,7 +55,7 @@ const MONTH_LABELS = [
 
 export function weekdayShort(d: Date): string {
   const day = d.getDay();
-  return WEEKDAY_LABELS_SHORT[day === 0 ? 6 : day - 1];
+  return WEEKDAY_LABELS_SHORT[day === 0 ? 6 : day - 1] ?? '';
 }
 
 export function monthLabel(d: Date): string {
@@ -69,7 +69,7 @@ export function dayLabel(d: Date): string {
 // Converts "HH:MM" (or "HH:MM:SS") to minutes since midnight.
 export function timeToMinutes(t: string | null | undefined): number | null {
   if (!t) return null;
-  const [h, m] = t.split(':').map(Number);
+  const [h = 0, m = 0] = t.split(':').map(Number);
   if (Number.isNaN(h) || Number.isNaN(m)) return null;
   return h * 60 + m;
 }
