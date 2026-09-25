@@ -1,25 +1,13 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "main": ".open-next/worker.js",
+  "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "iceglide-club",
-  "compatibility_date": "2026-09-25",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-24",
   "compatibility_flags": [
-    "global_fetch_strictly_public"
+    "nodejs_compat"
   ],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
-  },
-  "services": [
-    {
-      "binding": "WORKER_SELF_REFERENCE",
-      "service": "iceglide-club-frontend"
-    }
-  ],
-  "images": {
-    "binding": "IMAGES"
-  },
-  "observability": {
-    "enabled": true
   }
 }
