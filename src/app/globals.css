@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background-color: #f8fafc;
+}
+
+@layer utilities {
+  .rounded-xl2 {
+    border-radius: 1.25rem;
+  }
+}
