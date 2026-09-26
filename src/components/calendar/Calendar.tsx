@@ -22,22 +22,12 @@ import {
 import { layoutDayLessons } from './lessonLayout';
 import { TimedLessonBlock, MonthLessonChip } from './LessonPill';
 import { LessonDetailModal } from './LessonDetailModal';
-// Varsa projenizdeki NewLessonModal veya benzeri bir dialog bileşenini içe aktarın:
-import { NewLessonModal } from './NewLessonModal'; 
 
 type ViewMode = 'day' | 'week' | 'month';
 
 const DAY_START_MIN = 7 * 60; // 07:00
-const DAY_END_MIN = 22 * 60; // 22:00 (Google Takvim genişliği için 22:00 yapıldı)
-const HOUR_HEIGHT = 64; // Saat başına piksel yüksekliği
-
-// Google Takvim Renk Paleti (Ders durumuna veya tipine göre)
-export const LESSON_COLOR_MAP: Record<string, { bg: string; border: string; text: string; dot: string }> = {
-  COMPLETED: { bg: 'bg-emerald-50 hover:bg-emerald-100', border: 'border-emerald-500', text: 'text-emerald-900', dot: 'bg-emerald-500' },
-  CANCELLED: { bg: 'bg-rose-50 hover:bg-rose-100', border: 'border-rose-400', text: 'text-rose-900', dot: 'bg-rose-500' },
-  PLANNED: { bg: 'bg-indigo-50 hover:bg-indigo-100', border: 'border-indigo-500', text: 'text-indigo-900', dot: 'bg-indigo-500' },
-  DEFAULT: { bg: 'bg-sky-50 hover:bg-sky-100', border: 'border-sky-500', text: 'text-sky-900', dot: 'bg-sky-500' },
-};
+const DAY_END_MIN = 22 * 60; // 22:00
+const HOUR_HEIGHT = 64;
 
 export function Calendar({ canMarkAttendance }: { canMarkAttendance: boolean }) {
   const [view, setView] = useState<ViewMode>('week');
@@ -45,11 +35,7 @@ export function Calendar({ canMarkAttendance }: { canMarkAttendance: boolean }) 
   const [lessons, setLessons] = useState<LessonListItem[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Modal Yönetimleri
   const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
-  const [isNewLessonOpen, setIsNewLessonOpen] = useState(false);
-  const [newLessonInitialData, setNewLessonInitialData] = useState<{ date: string; time?: string } | null>(null);
 
   // Güncel Saat Çizgisi Takibi
   const [now, setNow] = useState<Date>(new Date());
@@ -89,7 +75,6 @@ export function Calendar({ canMarkAttendance }: { canMarkAttendance: boolean }) 
     load();
   }, [load]);
 
-  // Sayfa yüklendiğinde mevcut saate otomatik scroll
   useEffect(() => {
     if (view !== 'month' && scrollContainerRef.current) {
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -131,43 +116,15 @@ export function Calendar({ canMarkAttendance }: { canMarkAttendance: boolean }) 
     return marks;
   }, []);
 
-  // Boş bir zaman dilimine tıklandığında Hızlı Ders Ekleme aç
-  const handleSlotClick = (date: Date, hourMinutes: number) => {
-    const hours = Math.floor(hourMinutes / 60).toString().padStart(2, '0');
-    const mins = (hourMinutes % 60).toString().padStart(2, '0');
-    setNewLessonInitialData({
-      date: toISODate(date),
-      time: `${hours}:${mins}`,
-    });
-    setIsNewLessonOpen(true);
-  };
-
-  // Kırmızı Anlık Zaman Çizgisinin Konumu (Dakika bazlı)
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   const showCurrentTimeLine = currentMinutes >= DAY_START_MIN && currentMinutes <= DAY_END_MIN;
   const currentTimeTop = ((currentMinutes - DAY_START_MIN) / 60) * HOUR_HEIGHT;
 
   return (
     <div className="flex flex-col gap-3 font-sans text-slate-800">
-      {/* Üst Bar / Google Takvim Header */}
+      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white p-3 shadow-xs">
-        {/* Sol Taraf: Ekle Butonu, Gezinti, Başlık */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <Button
-            onClick={() => {
-              setNewLessonInitialData({ date: toISODate(new Date()) });
-              setIsNewLessonOpen(true);
-            }}
-            className="flex items-center gap-2 rounded-full bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-lg active:scale-95 sm:text-sm"
-          >
-            <svg className="h-4 w-4 stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span className="hidden sm:inline">Yeni Ders</span>
-          </Button>
-
-          <div className="h-6 w-px bg-slate-200" />
-
           <Button variant="outline" size="sm" onClick={goToday} className="rounded-lg text-xs font-semibold">
             Bugün
           </Button>
@@ -196,7 +153,6 @@ export function Calendar({ canMarkAttendance }: { canMarkAttendance: boolean }) 
           <h2 className="ml-1 text-base font-bold tracking-tight text-slate-900 sm:text-lg">{heading}</h2>
         </div>
 
-        {/* Sağ Taraf: Görünüm Modları ve Yenileme */}
         <div className="flex items-center gap-2">
           <button
             onClick={load}
@@ -228,10 +184,9 @@ export function Calendar({ canMarkAttendance }: { canMarkAttendance: boolean }) 
 
       {error && <ErrorState message={error} onRetry={load} />}
 
-      {/* GÜN & HAFTA GÖRÜNÜMÜ */}
+      {/* Gün & Hafta Görünümü */}
       {!error && view !== 'month' && (
         <div className="flex flex-col rounded-2xl border border-slate-200/80 bg-white shadow-card">
-          {/* Gün Header Satırı */}
           <div className={clsx('grid border-b border-slate-200 bg-slate-50/50 sticky top-0 z-10', view === 'day' ? 'grid-cols-[56px_1fr]' : 'grid-cols-[48px_repeat(7,minmax(120px,1fr))] sm:grid-cols-[56px_repeat(7,1fr)]')}>
             <div className="border-r border-slate-100" />
             {days.map((d) => {
@@ -260,10 +215,8 @@ export function Calendar({ canMarkAttendance }: { canMarkAttendance: boolean }) 
             })}
           </div>
 
-          {/* Saat Izgarası - Kaydırılabilir Alan */}
           <div ref={scrollContainerRef} className="max-h-[680px] overflow-y-auto overflow-x-auto relative">
             <div className={clsx('grid min-w-[700px] sm:min-w-0', view === 'day' ? 'grid-cols-[56px_1fr]' : 'grid-cols-[48px_repeat(7,minmax(120px,1fr))] sm:grid-cols-[56px_repeat(7,1fr)]')}>
-              {/* Sol Saat Etiketleri */}
               <div className="relative border-r border-slate-100 select-none bg-slate-50/20" style={{ height: ((DAY_END_MIN - DAY_START_MIN) / 60) * HOUR_HEIGHT }}>
                 {hourMarks.map((m) => (
                   <div
@@ -276,7 +229,6 @@ export function Calendar({ canMarkAttendance }: { canMarkAttendance: boolean }) 
                 ))}
               </div>
 
-              {/* Gün Sütunları */}
               {days.map((d) => {
                 const dayLessons = lessonsByDay.get(toISODate(d)) ?? [];
                 const positioned = layoutDayLessons(dayLessons);
@@ -288,21 +240,14 @@ export function Calendar({ canMarkAttendance }: { canMarkAttendance: boolean }) 
                     className="relative border-r border-slate-100 last:border-r-0"
                     style={{ height: ((DAY_END_MIN - DAY_START_MIN) / 60) * HOUR_HEIGHT }}
                   >
-                    {/* Saat Izgara Çizgileri & Tıklanabilir Slotlar */}
                     {hourMarks.map((m) => (
                       <div
                         key={m}
-                        onClick={() => handleSlotClick(d, m)}
                         style={{ top: ((m - DAY_START_MIN) / 60) * HOUR_HEIGHT, height: HOUR_HEIGHT }}
-                        className="absolute left-0 right-0 border-t border-slate-100/70 hover:bg-indigo-50/20 transition-colors cursor-pointer group"
-                      >
-                        <div className="hidden group-hover:block absolute left-2 top-1 text-[9px] font-medium text-indigo-400">
-                          + Ders Ekle
-                        </div>
-                      </div>
+                        className="absolute left-0 right-0 border-t border-slate-100/70"
+                      />
                     ))}
 
-                    {/* Kırmızı Canlı Zaman Çizgisi (Bugün için) */}
                     {isToday && showCurrentTimeLine && (
                       <div
                         className="absolute left-0 right-0 z-20 flex items-center pointer-events-none"
@@ -315,7 +260,6 @@ export function Calendar({ canMarkAttendance }: { canMarkAttendance: boolean }) 
 
                     {loading && <div className="absolute inset-0 animate-pulse bg-slate-50/40" />}
 
-                    {/* Ders Blokları */}
                     {positioned.map((item) => (
                       <TimedLessonBlock
                         key={item.lesson.id}
@@ -335,7 +279,7 @@ export function Calendar({ canMarkAttendance }: { canMarkAttendance: boolean }) 
         </div>
       )}
 
-      {/* AY GÖRÜNÜMÜ */}
+      {/* Ay Görünümü */}
       {!error && view === 'month' && (
         <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card">
           <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50/60 text-center text-[11px] font-bold uppercase tracking-wider text-slate-500">
@@ -396,26 +340,13 @@ export function Calendar({ canMarkAttendance }: { canMarkAttendance: boolean }) 
         </div>
       )}
 
-      {/* DERS DETAY MODALI */}
+      {/* Ders Detay Modalı */}
       {selectedLessonId !== null && (
         <LessonDetailModal
           lessonId={selectedLessonId}
           canMarkAttendance={canMarkAttendance}
           onClose={() => setSelectedLessonId(null)}
           onAttendanceRecorded={load}
-        />
-      )}
-
-      {/* YENİ DERS EKLEME MODALI */}
-      {isNewLessonOpen && (
-        <NewLessonModal
-          initialDate={newLessonInitialData?.date}
-          initialTime={newLessonInitialData?.time}
-          onClose={() => setIsNewLessonOpen(false)}
-          onSuccess={() => {
-            setIsNewLessonOpen(false);
-            load();
-          }}
         />
       )}
     </div>
