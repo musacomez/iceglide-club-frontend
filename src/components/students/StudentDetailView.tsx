@@ -5,6 +5,8 @@ import { SkeletonRows } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { StudentFormModal } from './StudentFormModal';
 import { PackagesList } from '@/components/packages/PackagesList';
 import { PaymentsList } from '@/components/payments/PaymentsList';
 import { api } from '@/lib/api/endpoints';
@@ -12,7 +14,22 @@ import { ApiError } from '@/lib/api/client';
 import type { StudentDetail } from '@/types/api';
 import { formatDate, initials } from '@/lib/utils/format';
 
-export function StudentDetailView({ studentId, showPayments = true }: { studentId: number; showPayments?: boolean }) {
+const STATUS_LABEL: Record<string, string> = {
+  active: 'Aktif',
+  inactive: 'Pasif',
+  frozen: 'Dondurulmuş',
+};
+
+export function StudentDetailView({
+  studentId,
+  showPayments = true,
+  canManage = false,
+}: {
+  studentId: number;
+  showPayments?: boolean;
+  canManage?: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
   const [detail, setDetail] = useState<StudentDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,13 +66,27 @@ export function StudentDetailView({ studentId, showPayments = true }: { studentI
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-lg font-semibold text-slate-900">{String(s.full_name)}</h2>
-              <Badge tone={s.status === 'active' ? 'green' : 'slate'}>{s.status === 'active' ? 'Aktif' : String(s.status)}</Badge>
+              <Badge tone={s.status === 'active' ? 'green' : 'slate'}>{STATUS_LABEL[String(s.status)] ?? String(s.status)}</Badge>
             </div>
             <p className="text-sm text-slate-500">
               {s.current_level ? `${s.current_level} · ` : ''}
               {s.current_group ?? 'Gruba atanmadı'}
             </p>
           </div>
+          {canManage && (
+            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+              <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+                <path
+                  d="M4 20h4l10.5-10.5a2.12 2.12 0 0 0-3-3L5 17v3Z"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Bilgileri Düzenle
+            </Button>
+          )}
         </div>
         <div className="mt-4 grid grid-cols-2 gap-4 border-t border-slate-100 pt-4 text-sm sm:grid-cols-4">
           <Field label="Telefon" value={(s.phone as string) ?? '-'} />
@@ -107,6 +138,10 @@ export function StudentDetailView({ studentId, showPayments = true }: { studentI
 
       <PackagesList studentId={studentId} />
       {showPayments && <PaymentsList studentId={studentId} />}
+
+      {canManage && editing && (
+        <StudentFormModal detail={detail} onClose={() => setEditing(false)} onSaved={() => load()} />
+      )}
     </div>
   );
 }

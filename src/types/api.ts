@@ -97,7 +97,10 @@ export interface PackageItem {
 }
 
 export interface StudentDetail {
-  student: StudentListItem & Record<string, unknown>;
+  student: StudentListItem & {
+    current_level_id?: number | null;
+    current_group_id?: number | null;
+  } & Record<string, unknown>;
   parents: StudentParent[];
   instructors: StudentInstructor[];
   packages: PackageItem[];
@@ -166,4 +169,67 @@ export interface CreateAttendanceInput {
   student_id: number;
   status: 'present' | 'absent' | 'late' | 'excused';
   note?: string | null;
+}
+
+// ---- Yönetim (yazma) tipleri ----
+
+export interface LookupOption {
+  id: number;
+  name: string;
+}
+
+export interface LookupUser {
+  id: number;
+  full_name: string;
+  role?: UserRole;
+  email?: string;
+}
+
+export interface Lookups {
+  instructors: LookupUser[];
+  parents: LookupUser[];
+  locations: LookupOption[];
+  groups: LookupOption[];
+  levels: LookupOption[];
+}
+
+export interface LessonInput {
+  title?: string;
+  lesson_type?: string | null;
+  group_id?: number | null;
+  instructor_user_id?: number | null;
+  location_id?: number | null;
+  lesson_date?: string;
+  start_time?: string;
+  end_time?: string;
+  notes?: string | null;
+  status?: 'scheduled' | 'completed' | 'cancelled';
+  cancellation_reason?: string | null;
+  student_ids?: number[];
+  repeat_weeks?: number;
+  allow_conflict?: boolean;
+}
+
+export interface LessonConflict {
+  kind: 'instructor' | 'student';
+  lesson_id: number;
+  title: string;
+  lesson_date: string;
+  start_time: string;
+  end_time: string;
+  student_name?: string;
+}
+
+export interface StudentInput {
+  full_name?: string;
+  birth_date?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  status?: 'active' | 'inactive' | 'frozen';
+  registration_date?: string | null;
+  level_id?: number | null;
+  group_id?: number | null;
+  instructor_user_ids?: number[];
+  parent_user_ids?: number[];
+  allow_duplicate?: boolean;
 }

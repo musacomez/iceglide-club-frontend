@@ -24,11 +24,15 @@ const ATTENDANCE_OPTIONS: { value: 'present' | 'late' | 'absent' | 'excused'; la
 export function LessonDetailModal({
   lessonId,
   canMarkAttendance,
+  canManage = false,
+  onEdit,
   onClose,
   onAttendanceRecorded,
 }: {
   lessonId: number;
   canMarkAttendance: boolean;
+  canManage?: boolean;
+  onEdit?: (detail: LessonDetail) => void;
   onClose: () => void;
   onAttendanceRecorded?: () => void;
 }) {
@@ -142,7 +146,12 @@ export function LessonDetailModal({
           </div>
         </div>
       )}
-      <div className="mt-2 flex justify-end">
+      <div className="mt-2 flex justify-end gap-2">
+        {canManage && detail && onEdit && (
+          <Button variant="outline" size="sm" onClick={() => onEdit(detail)}>
+            Düzenle / İptal Et
+          </Button>
+        )}
         <Button variant="secondary" size="sm" onClick={onClose}>
           Kapat
         </Button>

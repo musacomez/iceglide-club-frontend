@@ -4,7 +4,7 @@ import { Calendar } from '@/components/calendar/Calendar';
 export default function AdminCalendarPage() {
   return (
     <RoleGuard role="admin" title="Takvim">
-      <Calendar canMarkAttendance />
+      <Calendar canMarkAttendance canManageLessons />
     </RoleGuard>
   );
 }

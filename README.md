@@ -79,6 +79,18 @@ Consequences for the frontend, deliberately, per the brief's own rule
   `canAccessStudent()` in `payments.ts` doesn't grant instructors access
   (it does for packages).
 
+### Yönetim özellikleri (admin / head_coach)
+
+Backend'e `POST/PATCH /api/lessons`, `POST/PATCH /api/students` ve `GET /api/lookups` eklendikten sonra
+arayüze şunlar eklendi:
+
+- **Takvim:** "Yeni Ders" butonu, boş saat dilimine tıklayarak ders ekleme, haftalık tekrar, çakışma uyarısı,
+  ders düzenleme ve iptal (`LessonFormModal`).
+- **Öğrenciler:** "Yeni Öğrenci" formu, durum filtresi, öğrenci detayında "Bilgileri Düzenle"
+  (seviye, grup, eğitmen ve veli bağlantıları dahil) (`StudentFormModal`).
+
+Hâlâ olmayanlar: özel ders talepleri, paket tanımlama, ödeme girişi, veli/eğitmen hesabı oluşturma.
+
 ## 4. Architecture
 
 ```

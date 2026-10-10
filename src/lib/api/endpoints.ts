@@ -4,12 +4,15 @@ import type {
   CreateAttendanceInput,
   DashboardSummary,
   LessonDetail,
+  LessonInput,
   LessonListItem,
   LoginResult,
+  Lookups,
   Me,
   PackageItem,
   PaymentItem,
   StudentDetail,
+  StudentInput,
   StudentListItem,
 } from '@/types/api';
 
@@ -41,4 +44,19 @@ export const api = {
 
   listStudentPayments: (studentId: number) =>
     apiRequest<PaymentItem[]>(`/api/payments/student/${studentId}`),
+
+  // ---- Yönetim (admin / head_coach) ----
+  getLookups: () => apiRequest<Lookups>('/api/lookups'),
+
+  createStudent: (input: StudentInput) =>
+    apiRequest<{ id: number }>('/api/students', { method: 'POST', body: input }),
+
+  updateStudent: (id: number, input: StudentInput) =>
+    apiRequest<{ id: number }>(`/api/students/${id}`, { method: 'PATCH', body: input }),
+
+  createLesson: (input: LessonInput) =>
+    apiRequest<{ ids: number[]; count: number }>('/api/lessons', { method: 'POST', body: input }),
+
+  updateLesson: (id: number, input: LessonInput) =>
+    apiRequest<{ id: number }>(`/api/lessons/${id}`, { method: 'PATCH', body: input }),
 };

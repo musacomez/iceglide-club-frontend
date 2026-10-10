@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { api } from '@/lib/api/endpoints';
 import { ApiError } from '@/lib/api/client';
-import type { LessonListItem } from '@/types/api';
+import type { LessonDetail, LessonListItem } from '@/types/api';
 import {
   addDays,
   addMonths,
@@ -22,6 +22,7 @@ import {
 import { layoutDayLessons } from './lessonLayout';
 import { TimedLessonBlock, MonthLessonChip } from './LessonPill';
 import { LessonDetailModal } from './LessonDetailModal';
+import { LessonFormModal, type LessonPrefill } from './LessonFormModal';
 
 type ViewMode = 'day' | 'week' | 'month';
 
@@ -29,13 +30,27 @@ const DAY_START_MIN = 7 * 60; // 07:00
 const DAY_END_MIN = 21 * 60; // 21:00
 const HOUR_HEIGHT = 60;
 
-export function Calendar({ canMarkAttendance }: { canMarkAttendance: boolean }) {
+function minutesToTime(total: number): string {
+  const clamped = Math.max(0, Math.min(23 * 60 + 30, total));
+  return `${String(Math.floor(clamped / 60)).padStart(2, '0')}:${String(clamped % 60).padStart(2, '0')}`;
+}
+
+export function Calendar({
+  canMarkAttendance,
+  canManageLessons = false,
+}: {
+  canMarkAttendance: boolean;
+  /** Admin / baş antrenör: ders ekleme, düzenleme ve iptal. */
+  canManageLessons?: boolean;
+}) {
   const [view, setView] = useState<ViewMode>('week');
   const [cursor, setCursor] = useState(() => new Date());
   const [lessons, setLessons] = useState<LessonListItem[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
+  const [creating, setCreating] = useState<LessonPrefill | null>(null);
+  const [editing, setEditing] = useState<LessonDetail | null>(null);
 
   const range = useMemo(() => {
     if (view === 'day') return { from: cursor, to: cursor };
@@ -116,6 +131,24 @@ export function Calendar({ canMarkAttendance }: { canMarkAttendance: boolean }) 
           </Button>
           <h2 className="ml-1 text-sm font-semibold text-slate-900 sm:text-base">{heading}</h2>
         </div>
+        <div className="flex items-center gap-2">
+        {canManageLessons && (
+          <Button
+            size="sm"
+            onClick={() =>
+              setCreating({
+                date: toISODate(view === 'month' ? new Date() : cursor),
+                start: '10:00',
+                end: '11:00',
+              })
+            }
+          >
+            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+              <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            Yeni Ders
+          </Button>
+        )}
         <div className="flex rounded-lg border border-slate-200 bg-white p-0.5">
           {(['day', 'week', 'month'] as ViewMode[]).map((v) => (
             <button
@@ -129,6 +162,7 @@ export function Calendar({ canMarkAttendance }: { canMarkAttendance: boolean }) 
               {v === 'day' ? 'Gün' : v === 'week' ? 'Hafta' : 'Ay'}
             </button>
           ))}
+        </div>
         </div>
       </div>
 
@@ -171,8 +205,28 @@ export function Calendar({ canMarkAttendance }: { canMarkAttendance: boolean }) 
               return (
                 <div
                   key={d.toISOString()}
-                  className="relative border-r border-slate-100 last:border-r-0"
+                  className={clsx(
+                    'relative border-r border-slate-100 last:border-r-0',
+                    canManageLessons && 'cursor-cell',
+                  )}
                   style={{ height: ((DAY_END_MIN - DAY_START_MIN) / 60) * HOUR_HEIGHT }}
+                  title={canManageLessons ? 'Boş alana tıklayarak ders ekleyin' : undefined}
+                  onClick={
+                    canManageLessons
+                      ? (e) => {
+                          // Mevcut bir ders bloğuna tıklandıysa yeni ders açma.
+                          if ((e.target as HTMLElement).closest('button')) return;
+                          const y = e.clientY - e.currentTarget.getBoundingClientRect().top;
+                          const raw = DAY_START_MIN + (y / HOUR_HEIGHT) * 60;
+                          const startMin = Math.floor(raw / 30) * 30;
+                          setCreating({
+                            date: toISODate(d),
+                            start: minutesToTime(startMin),
+                            end: minutesToTime(startMin + 60),
+                          });
+                        }
+                      : undefined
+                  }
                 >
                   {hourMarks.map((m) => (
                     <div
@@ -248,9 +302,21 @@ export function Calendar({ canMarkAttendance }: { canMarkAttendance: boolean }) 
         <LessonDetailModal
           lessonId={selectedLessonId}
           canMarkAttendance={canMarkAttendance}
+          canManage={canManageLessons}
+          onEdit={(detail) => {
+            setSelectedLessonId(null);
+            setEditing(detail);
+          }}
           onClose={() => setSelectedLessonId(null)}
           onAttendanceRecorded={load}
         />
+      )}
+
+      {canManageLessons && creating && (
+        <LessonFormModal prefill={creating} onClose={() => setCreating(null)} onSaved={load} />
+      )}
+      {canManageLessons && editing && (
+        <LessonFormModal detail={editing} onClose={() => setEditing(null)} onSaved={load} />
       )}
     </div>
   );

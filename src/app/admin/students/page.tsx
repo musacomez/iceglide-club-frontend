@@ -4,7 +4,7 @@ import { StudentsTable } from '@/components/students/StudentsTable';
 export default function AdminStudentsPage() {
   return (
     <RoleGuard role="admin" title="Öğrenciler">
-      <StudentsTable basePath="/admin/students" />
+      <StudentsTable basePath="/admin/students" canManage />
     </RoleGuard>
   );
 }
