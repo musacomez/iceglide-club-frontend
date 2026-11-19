@@ -1,15 +1,18 @@
 'use client';
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '@/lib/auth/AuthProvider';
 import { ROLE_LABEL } from '@/lib/auth/roles';
 import { initials } from '@/lib/utils/format';
+import { ChangePasswordModal } from './ChangePasswordModal';
 import { SidebarNav, LogoMark } from './Sidebar';
 import type { NavItem } from '@/lib/auth/roles';
 
 export function Header({ title, items }: { title: string; items: NavItem[] }) {
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
@@ -30,6 +33,8 @@ export function Header({ title, items }: { title: string; items: NavItem[] }) {
       <div className="relative">
         <button
           onClick={() => setMenuOpen((v) => !v)}
+          aria-label="Hesap menüsü"
+          aria-expanded={menuOpen}
           className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 hover:bg-slate-100"
         >
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white">
@@ -42,6 +47,16 @@ export function Header({ title, items }: { title: string; items: NavItem[] }) {
         </button>
         {menuOpen && (
           <div className="absolute right-0 mt-2 w-44 rounded-xl border border-slate-100 bg-white py-1 shadow-popover">
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                setPasswordOpen(true);
+              }}
+              className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
+            >
+              Parolamı Değiştir
+            </button>
             <button
               onClick={logout}
               className="block w-full px-4 py-2 text-left text-sm text-rose-600 hover:bg-rose-50"
@@ -71,6 +86,10 @@ export function Header({ title, items }: { title: string; items: NavItem[] }) {
           </div>
           <div className="flex-1 bg-slate-900/40" onClick={() => setMobileNavOpen(false)} />
         </div>
+      )}
+      {passwordOpen && createPortal(
+        <ChangePasswordModal onClose={() => setPasswordOpen(false)} />,
+        document.body,
       )}
     </header>
   );
