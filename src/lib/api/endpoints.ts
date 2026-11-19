@@ -20,6 +20,12 @@ export const api = {
   login: (email: string, password: string) =>
     apiRequest<LoginResult>('/api/auth/login', { method: 'POST', body: { email, password } }),
 
+  changePassword: (currentPassword: string, newPassword: string) =>
+    apiRequest<{ changed: true }>('/api/auth/change-password', {
+      method: 'POST',
+      body: { current_password: currentPassword, new_password: newPassword },
+    }),
+
   me: () => apiRequest<Me>('/api/me'),
 
   dashboardSummary: () => apiRequest<DashboardSummary>('/api/dashboard/summary'),
