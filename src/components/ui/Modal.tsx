@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useId } from 'react';
 import clsx from '@/lib/utils/clsx';
 
 export function Modal({
@@ -18,6 +18,8 @@ export function Modal({
   footer?: React.ReactNode;
   size?: 'sm' | 'md' | 'lg';
 }) {
+  const titleId = useId();
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -36,6 +38,7 @@ export function Modal({
       <div
         role="dialog"
         aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
         className={clsx(
           'w-full rounded-t-2xl bg-white shadow-popover sm:rounded-2xl',
           sizeClass,
@@ -44,7 +47,7 @@ export function Modal({
       >
         {title && (
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-            <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
+            <h2 id={titleId} className="text-sm font-semibold text-slate-900">{title}</h2>
             <button
               onClick={onClose}
               aria-label="Kapat"
