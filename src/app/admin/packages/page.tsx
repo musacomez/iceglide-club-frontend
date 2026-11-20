@@ -13,12 +13,12 @@ export default function AdminPackagesPage() {
   return (
     <RoleGuard role="admin" title="Paketler">
       <p className="mb-4 text-sm text-slate-500">
-        API yalnızca öğrenci başına paket sorgusu sunduğundan, paketleri görmek için önce bir öğrenci seçin.
+        Paketlerini görüntülemek veya paket atamak için bir öğrenci seçin.
       </p>
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[320px_1fr]">
         <StudentPicker selectedId={student?.id ?? null} onSelect={setStudent} />
         {student ? (
-          <PackagesList studentId={student.id} title={`${student.full_name} - Paketler`} />
+          <PackagesList key={student.id} studentId={student.id} title={`${student.full_name} - Paketler`} canAssign={student.status === 'active'} />
         ) : (
           <EmptyState title="Bir öğrenci seçin" description="Paketlerini görmek için soldaki listeden bir öğrenci seçin." />
         )}

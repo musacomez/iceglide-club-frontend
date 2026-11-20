@@ -32,26 +32,48 @@ export function StudentDetailView({
   const [editing, setEditing] = useState(false);
   const [detail, setDetail] = useState<StudentDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadedStudentId, setLoadedStudentId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
     try {
       setDetail(await api.getStudent(studentId));
+      setError(null);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Öğrenci bilgisi yüklenemedi.');
     } finally {
+      setLoadedStudentId(studentId);
       setLoading(false);
     }
   }, [studentId]);
 
-  useEffect(() => {
-    load();
+  const refresh = useCallback(() => {
+    setLoading(true);
+    void load();
   }, [load]);
 
-  if (loading) return <SkeletonRows rows={5} />;
-  if (error) return <ErrorState message={error} onRetry={load} />;
+  useEffect(() => {
+    let cancelled = false;
+    api.getStudent(studentId).then(
+      (result) => {
+        if (cancelled) return;
+        setDetail(result);
+        setError(null);
+        setLoadedStudentId(studentId);
+        setLoading(false);
+      },
+      (err: unknown) => {
+        if (cancelled) return;
+        setError(err instanceof ApiError ? err.message : 'Öğrenci bilgisi yüklenemedi.');
+        setLoadedStudentId(studentId);
+        setLoading(false);
+      },
+    );
+    return () => { cancelled = true; };
+  }, [studentId]);
+
+  if (loading || loadedStudentId !== studentId) return <SkeletonRows rows={5} />;
+  if (error) return <ErrorState message={error} onRetry={refresh} />;
   if (!detail) return null;
 
   const s = detail.student;
@@ -136,11 +158,11 @@ export function StudentDetailView({
         </Card>
       </div>
 
-      <PackagesList studentId={studentId} />
+      <PackagesList studentId={studentId} canAssign={canManage && s.status === 'active'} />
       {showPayments && <PaymentsList studentId={studentId} />}
 
       {canManage && editing && (
-        <StudentFormModal detail={detail} onClose={() => setEditing(false)} onSaved={() => load()} />
+        <StudentFormModal detail={detail} onClose={() => setEditing(false)} onSaved={refresh} />
       )}
     </div>
   );

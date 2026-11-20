@@ -88,12 +88,30 @@ export interface PackageItem {
   package_number: string | null;
   status: string;
   remaining_lessons: number;
+  total_lessons?: number;
   starts_at: string | null;
   expires_at: string | null;
   purchased_at: string | null;
   updated_at: string;
   package_type_name: string;
   package_type_lesson_count?: number;
+}
+
+export interface PackageTypeOption {
+  id: number;
+  name: string;
+  lesson_count: number;
+  price_cents: number;
+  validity_days: number | null;
+}
+
+export interface PackageAssignment {
+  package_type_id: number;
+  starts_at: string;
+  request_id: string;
+  expected_price_cents: number;
+  expected_lesson_count: number;
+  expected_validity_days: number | null;
 }
 
 export interface StudentDetail {

@@ -10,6 +10,8 @@ import type {
   Lookups,
   Me,
   PackageItem,
+  PackageAssignment,
+  PackageTypeOption,
   PaymentItem,
   StudentDetail,
   StudentInput,
@@ -47,6 +49,13 @@ export const api = {
 
   listStudentPackages: (studentId: number) =>
     apiRequest<PackageItem[]>(`/api/packages/student/${studentId}`),
+
+  listPackageTypes: () => apiRequest<PackageTypeOption[]>('/api/packages/types'),
+
+  assignStudentPackage: (studentId: number, body: PackageAssignment) =>
+    apiRequest<{ id: number; charge_id: number | null }>(`/api/packages/student/${studentId}`, {
+      method: 'POST', body,
+    }),
 
   listStudentPayments: (studentId: number) =>
     apiRequest<PaymentItem[]>(`/api/payments/student/${studentId}`),
