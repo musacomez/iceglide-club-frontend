@@ -218,6 +218,7 @@ export type PaymentItem = {
   student_id: number;
   package_id: number | null;
   payment_date: string;
+  description?: string | null;
   package_number: string | null;
   payment_method?: string | null;
   status?: 'pending' | 'completed' | 'cancelled';

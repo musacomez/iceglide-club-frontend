@@ -159,7 +159,13 @@ export function StudentDetailView({
       </div>
 
       <PackagesList studentId={studentId} canAssign={canManage && s.status === 'active'} />
-      {showPayments && <PaymentsList studentId={studentId} />}
+      {showPayments && (
+        <PaymentsList
+          studentId={studentId}
+          title={canManage ? 'Ödeme Geçmişi' : undefined}
+          showDescription={canManage}
+        />
+      )}
 
       {canManage && editing && (
         <StudentFormModal detail={detail} onClose={() => setEditing(false)} onSaved={refresh} />
