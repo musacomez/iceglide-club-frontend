@@ -28,6 +28,7 @@ export function navForRole(role: UserRole): NavItem[] {
         { href: '/admin', label: 'Panel' },
         { href: '/admin/calendar', label: 'Takvim' },
         { href: '/admin/students', label: 'Öğrenciler' },
+        { href: '/admin/coaches', label: 'Antrenörler' },
         { href: '/admin/packages', label: 'Paketler' },
         { href: '/admin/payments', label: 'Finans' },
       ];

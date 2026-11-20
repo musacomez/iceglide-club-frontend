@@ -74,7 +74,7 @@ export function TimedLessonBlock({
       <p className="truncate font-semibold"><LessonTitle lesson={item.lesson} /></p>
       {height > 34 && (
         <p className="truncate text-[10px] opacity-80">
-          {item.lesson.instructor_name ?? 'Eğitmen atanmadı'}
+          {item.lesson.instructor_names?.join(', ') || item.lesson.instructor_name || 'Antrenör atanmadı'}
           {item.lesson.location_name ? ` · ${item.lesson.location_name}` : ''}
         </p>
       )}

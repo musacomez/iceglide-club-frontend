@@ -93,7 +93,7 @@ export function LessonDetailModal({
           </div>
 
           <div className="grid grid-cols-2 gap-4 rounded-xl bg-slate-50 p-4 text-sm sm:grid-cols-4">
-            <InfoField label="Eğitmen" value={lesson.instructor_name ?? 'Atanmadı'} />
+            <InfoField label="Antrenörler" value={lesson.instructor_names?.join(', ') || lesson.instructor_name || 'Atanmadı'} />
             <InfoField label="Tür" value={lesson.lesson_type ?? '-'} />
             <InfoField label="Grup" value={lesson.group_name ?? '-'} />
             <InfoField label="Lokasyon" value={lesson.location_name ?? '-'} />

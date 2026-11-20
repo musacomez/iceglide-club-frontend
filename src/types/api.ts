@@ -182,6 +182,8 @@ export interface LessonListItem {
   cancellation_reason: string | null;
   notes: string | null;
   instructor_name: string | null;
+  instructor_names?: string[];
+  instructor_user_ids?: number[];
   group_name: string | null;
   location_name: string | null;
 }
@@ -261,6 +263,7 @@ export interface LessonInput {
   lesson_type?: string | null;
   group_id?: number | null;
   instructor_user_id?: number | null;
+  instructor_user_ids?: number[];
   location_id?: number | null;
   lesson_date?: string;
   start_time?: string;
@@ -296,3 +299,19 @@ export interface StudentInput {
   parent_user_ids?: number[];
   allow_duplicate?: boolean;
 }
+
+export interface CoachInput {
+  full_name: string;
+  email: string;
+  phone: string | null;
+  active: boolean;
+  commission_bps: number | null;
+  lesson_fee_cents: number | null;
+  password?: string;
+}
+
+export type ManagedCoach = Omit<CoachInput, 'active' | 'password'> & {
+  id: number;
+  role: 'instructor' | 'head_coach';
+  active: 0 | 1;
+};

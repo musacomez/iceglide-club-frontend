@@ -1,6 +1,8 @@
 import { apiRequest } from './client';
 import type {
   AttendanceRecord,
+  CoachInput,
+  ManagedCoach,
   CreateAttendanceInput,
   DashboardSummary,
   LessonDetail,
@@ -99,6 +101,13 @@ export const api = {
 
   receivePayment: (studentId: number, chargeId: number, body: ReceiptInput) =>
     apiRequest<{ id: number }>(`/api/finance/student/${studentId}/charges/${chargeId}/payments`, { method: 'POST', body }),
+
+  listCoaches: () => apiRequest<ManagedCoach[]>('/api/manage/coaches'),
+
+  saveCoach: (body: CoachInput, id?: number) =>
+    apiRequest<{ id: number }>(id === undefined ? '/api/manage/coaches' : `/api/manage/coaches/${id}`, {
+      method: id === undefined ? 'POST' : 'PATCH', body,
+    }),
 
   getLookups: () => apiRequest<Lookups>('/api/lookups'),
 

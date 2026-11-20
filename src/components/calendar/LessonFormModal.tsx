@@ -57,7 +57,17 @@ export function LessonFormModal({
   const [date, setDate] = useState(l?.lesson_date ?? prefill?.date ?? toISODate(new Date()));
   const [start, setStart] = useState(l?.start_time ? formatTime(l.start_time) : (prefill?.start ?? '10:00'));
   const [end, setEnd] = useState(l?.end_time ? formatTime(l.end_time) : (prefill?.end ?? '11:00'));
-  const [instructorId, setInstructorId] = useState(l?.instructor_user_id ? String(l.instructor_user_id) : '');
+  const [instructorIds, setInstructorIds] = useState<number[]>(() =>
+    l?.instructor_user_ids ?? (l?.instructor_user_id ? [l.instructor_user_id] : []));
+  const instructorOptions = [...(lookups?.instructors ?? [])];
+  for (const id of instructorIds) {
+    if (instructorOptions.some((coach) => coach.id === id)) continue;
+    const previousIndex = l?.instructor_user_ids?.indexOf(id) ?? -1;
+    instructorOptions.push({
+      id,
+      full_name: l?.instructor_names?.[previousIndex] ?? l?.instructor_name ?? `Antrenör #${id}`,
+    });
+  }
   const [locationId, setLocationId] = useState(l?.location_id ? String(l.location_id) : '');
   const [groupId, setGroupId] = useState(l?.group_id ? String(l.group_id) : '');
   const [notes, setNotes] = useState(l?.notes ?? '');
@@ -139,7 +149,8 @@ export function LessonFormModal({
       lesson_date: date,
       start_time: start,
       end_time: end,
-      instructor_user_id: instructorId ? Number(instructorId) : null,
+      instructor_user_id: instructorIds[0] ?? null,
+      instructor_user_ids: instructorIds,
       location_id: locationId ? Number(locationId) : null,
       group_id: groupId ? Number(groupId) : null,
       notes: notes.trim() || null,
@@ -249,15 +260,22 @@ export function LessonFormModal({
 
         {lookupError && <p className="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{lookupError}</p>}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Select label="Eğitmen" value={instructorId} onChange={(e) => setInstructorId(e.target.value)} disabled={!lookups}>
-            <option value="">Atanmadı</option>
-            {lookups?.instructors.map((i) => (
-              <option key={i.id} value={i.id}>
-                {i.full_name}
-              </option>
+        <fieldset disabled={!lookups} className="min-w-0 rounded-xl border border-brand-100 p-3">
+          <legend className="px-1 text-sm font-semibold text-slate-800">Antrenörler</legend>
+          {!instructorOptions.length && <p className="pb-1 text-sm text-slate-500">{lookups ? 'Aktif antrenör yok.' : 'Antrenör listesi bekleniyor.'}</p>}
+          <div className="grid max-h-44 gap-1 overflow-y-auto sm:grid-cols-2">
+            {instructorOptions.map((coach) => (
+              <label key={coach.id} className="flex min-h-10 cursor-pointer items-center gap-2 rounded-lg px-2 text-sm hover:bg-brand-50">
+                <input type="checkbox" className="h-4 w-4 accent-brand-600" checked={instructorIds.includes(coach.id)}
+                  disabled={instructorIds.length >= 20 && !instructorIds.includes(coach.id)}
+                  onChange={(event) => setInstructorIds((current) => event.target.checked
+                    ? [...current, coach.id] : current.filter((id) => id !== coach.id))} />
+                {coach.full_name}
+              </label>
             ))}
-          </Select>
+          </div>
+        </fieldset>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Select label="Lokasyon" value={locationId} onChange={(e) => setLocationId(e.target.value)} disabled={!lookups}>
             <option value="">Belirtilmedi</option>
             {lookups?.locations.map((o) => (
