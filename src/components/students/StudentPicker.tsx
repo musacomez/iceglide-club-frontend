@@ -16,9 +16,11 @@ import clsx from '@/lib/utils/clsx';
 // packages or payments to view, instead of inventing a list-all endpoint.
 export function StudentPicker({
   selectedId,
+  includeInactive = false,
   onSelect,
 }: {
   selectedId: number | null;
+  includeInactive?: boolean;
   onSelect: (student: StudentListItem) => void;
 }) {
   const [search, setSearch] = useState('');
@@ -30,13 +32,13 @@ export function StudentPicker({
     setLoading(true);
     setError(null);
     try {
-      setRows(await api.listStudents({ status: 'active', search: search || undefined }));
+      setRows(await api.listStudents({ status: includeInactive ? undefined : 'active', search: search || undefined }));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Öğrenciler yüklenemedi.');
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [includeInactive, search]);
 
   useEffect(() => {
     const t = setTimeout(load, 250);

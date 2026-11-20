@@ -9,6 +9,12 @@ import type {
   LoginResult,
   Lookups,
   Me,
+  LookupOption,
+  ManagedPackageType,
+  ManualChargeInput,
+  PackageTypeInput,
+  ReceiptInput,
+  StudentCharge,
   PackageItem,
   PackageAssignment,
   PackageTypeOption,
@@ -61,6 +67,30 @@ export const api = {
     apiRequest<PaymentItem[]>(`/api/payments/student/${studentId}`),
 
   // ---- Yönetim (admin / head_coach) ----
+  saveGroup: (name: string, id?: number) =>
+    apiRequest<LookupOption>(id === undefined ? '/api/groups' : `/api/groups/${id}`, {
+      method: id === undefined ? 'POST' : 'PATCH', body: { name },
+    }),
+
+  listManagedPackageTypes: () => apiRequest<ManagedPackageType[]>('/api/manage/package-types'),
+
+  savePackageType: (body: PackageTypeInput, id?: number) =>
+    apiRequest<ManagedPackageType>(id === undefined ? '/api/manage/package-types' : `/api/manage/package-types/${id}`, {
+      method: id === undefined ? 'POST' : 'PATCH', body,
+    }),
+
+  listCharges: (studentId: number) =>
+    apiRequest<StudentCharge[]>(`/api/finance/student/${studentId}/charges`),
+
+  createCharge: (studentId: number, body: ManualChargeInput) =>
+    apiRequest<{ id: number }>(`/api/finance/student/${studentId}/charges`, { method: 'POST', body }),
+
+  cancelCharge: (studentId: number, chargeId: number) =>
+    apiRequest<{ id: number }>(`/api/finance/student/${studentId}/charges/${chargeId}/cancel`, { method: 'POST' }),
+
+  receivePayment: (studentId: number, chargeId: number, body: ReceiptInput) =>
+    apiRequest<{ id: number }>(`/api/finance/student/${studentId}/charges/${chargeId}/payments`, { method: 'POST', body }),
+
   getLookups: () => apiRequest<Lookups>('/api/lookups'),
 
   createStudent: (input: StudentInput) =>

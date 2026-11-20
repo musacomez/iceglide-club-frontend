@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { RoleGuard } from '@/components/layout/RoleGuard';
 import { StudentPicker } from '@/components/students/StudentPicker';
+import { PackageTypesPanel } from '@/components/packages/PackageTypesPanel';
 import { PackagesList } from '@/components/packages/PackagesList';
 import { EmptyState } from '@/components/ui/EmptyState';
 import type { StudentListItem } from '@/types/api';
@@ -12,6 +13,7 @@ export default function AdminPackagesPage() {
 
   return (
     <RoleGuard role="admin" title="Paketler">
+      <div className="mb-5"><PackageTypesPanel /></div>
       <p className="mb-4 text-sm text-slate-500">
         Paketlerini görüntülemek veya paket atamak için bir öğrenci seçin.
       </p>

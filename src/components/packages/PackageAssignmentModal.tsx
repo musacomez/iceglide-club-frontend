@@ -7,8 +7,8 @@ import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import { ApiError } from '@/lib/api/client';
 import { api } from '@/lib/api/endpoints';
-import { toISODate } from '@/lib/utils/date';
-import { formatCurrency } from '@/lib/utils/format';
+import { addDays, toISODate } from '@/lib/utils/date';
+import { formatCurrency, formatDate } from '@/lib/utils/format';
 import type { PackageTypeOption } from '@/types/api';
 
 export function PackageAssignmentModal({
@@ -34,6 +34,9 @@ export function PackageAssignmentModal({
   }, []);
 
   const selected = types?.find((option) => String(option.id) === typeId);
+  const endDate = startsAt && selected?.validity_days
+    ? toISODate(addDays(new Date(`${startsAt}T12:00:00`), selected.validity_days - 1))
+    : null;
 
   function close() {
     if (!pending.current) onClose();
@@ -82,6 +85,8 @@ export function PackageAssignmentModal({
         {selected && (
           <div className="rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
             {selected.lesson_count} ders · {selected.validity_days ? `${selected.validity_days} gün` : 'Süresiz'}
+            {selected.lessons_per_week && ` · haftada ${selected.lessons_per_week} ders`}
+            {endDate && <p className="mt-1">Bitiş: {formatDate(endDate)}</p>}
             <p className="mt-1 font-medium">
               {selected.price_cents ? `Oluşacak borç: ${formatCurrency(selected.price_cents / 100)}` : 'Ücretsiz paket'}
             </p>

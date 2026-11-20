@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import clsx from '@/lib/utils/clsx';
 import { Button } from '@/components/ui/Button';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -26,12 +26,12 @@ import { LessonFormModal, type LessonPrefill } from './LessonFormModal';
 
 type ViewMode = 'day' | 'week' | 'month';
 
-const DAY_START_MIN = 7 * 60; // 07:00
-const DAY_END_MIN = 21 * 60; // 21:00
+const DAY_START_MIN = 0;
+const DAY_END_MIN = 24 * 60;
 const HOUR_HEIGHT = 60;
 
 function minutesToTime(total: number): string {
-  const clamped = Math.max(0, Math.min(23 * 60 + 30, total));
+  const clamped = Math.max(0, Math.min(DAY_END_MIN - 1, total));
   return `${String(Math.floor(clamped / 60)).padStart(2, '0')}:${String(clamped % 60).padStart(2, '0')}`;
 }
 
@@ -44,6 +44,14 @@ export function Calendar({
   canManageLessons?: boolean;
 }) {
   const [view, setView] = useState<ViewMode>('week');
+  const timeGrid = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (window.matchMedia('(max-width: 639px)').matches) setView('day');
+  }, []);
+
+  useEffect(() => {
+    if (timeGrid.current) timeGrid.current.scrollTop = 7 * HOUR_HEIGHT;
+  }, [view]);
   const [cursor, setCursor] = useState(() => new Date());
   const [lessons, setLessons] = useState<LessonListItem[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -87,7 +95,9 @@ export function Calendar({
   const goNext = () =>
     setCursor((c) => (view === 'day' ? addDays(c, 1) : view === 'week' ? addDays(c, 7) : addMonths(c, 1)));
 
-  const heading = view === 'month' ? monthLabel(cursor) : dayLabel(view === 'day' ? cursor : startOfWeek(cursor));
+  const heading = view === 'month' ? monthLabel(cursor)
+    : view === 'day' ? dayLabel(cursor)
+    : `${dayLabel(range.from)} – ${dayLabel(range.to)}`;
 
   const days = useMemo(() => {
     if (view === 'day') return [cursor];
@@ -108,14 +118,14 @@ export function Calendar({
 
   const hourMarks = useMemo(() => {
     const marks: number[] = [];
-    for (let m = DAY_START_MIN; m <= DAY_END_MIN; m += 60) marks.push(m);
+    for (let m = DAY_START_MIN; m < DAY_END_MIN; m += 60) marks.push(m);
     return marks;
   }, []);
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl2 border border-slate-200 bg-white p-3 shadow-card">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" onClick={goPrev} aria-label="Önceki">
             <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
               <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -137,7 +147,7 @@ export function Calendar({
             size="sm"
             onClick={() =>
               setCreating({
-                date: toISODate(view === 'month' ? new Date() : cursor),
+                date: toISODate(cursor),
                 start: '10:00',
                 end: '11:00',
               })
@@ -153,6 +163,7 @@ export function Calendar({
           {(['day', 'week', 'month'] as ViewMode[]).map((v) => (
             <button
               key={v}
+              aria-pressed={view === v}
               onClick={() => setView(v)}
               className={clsx(
                 'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
@@ -169,15 +180,15 @@ export function Calendar({
       {error && <ErrorState message={error} onRetry={load} />}
 
       {!error && view !== 'month' && (
-        <div className="overflow-x-auto rounded-xl2 border border-slate-200 bg-white shadow-card">
+        <div ref={timeGrid} tabIndex={0} role="region" aria-label="24 saatlik takvim" className="max-h-[72vh] min-h-72 overflow-auto rounded-xl2 border border-slate-200 bg-white shadow-card">
           <div className={clsx('grid', view === 'day' ? 'grid-cols-[56px_1fr]' : 'grid-cols-[56px_repeat(7,minmax(120px,1fr))]')}>
-            <div className="border-r border-slate-100" />
+            <div className="sticky left-0 top-0 z-30 border-b border-r border-slate-200 bg-slate-50" />
             {days.map((d) => (
               <div
                 key={d.toISOString()}
                 className={clsx(
-                  'border-b border-r border-slate-100 px-2 py-2 text-center last:border-r-0',
-                  isSameDay(d, new Date()) && 'bg-brand-50/60',
+                  'sticky top-0 z-20 border-b border-r border-slate-200 bg-white px-2 py-2 text-center last:border-r-0',
+                  isSameDay(d, new Date()) && 'bg-brand-50',
                 )}
               >
                 <p className="text-[11px] font-medium uppercase text-slate-400">{weekdayShort(d)}</p>
@@ -187,12 +198,12 @@ export function Calendar({
               </div>
             ))}
 
-            <div className="relative border-r border-slate-100" style={{ height: ((DAY_END_MIN - DAY_START_MIN) / 60) * HOUR_HEIGHT }}>
+            <div className="sticky left-0 z-10 border-r border-slate-200 bg-slate-50" style={{ height: ((DAY_END_MIN - DAY_START_MIN) / 60) * HOUR_HEIGHT }}>
               {hourMarks.map((m) => (
                 <div
                   key={m}
                   style={{ top: ((m - DAY_START_MIN) / 60) * HOUR_HEIGHT }}
-                  className="absolute -translate-y-2 right-1 text-[10px] text-slate-400"
+                  className="absolute right-1 pt-0.5 text-[10px] tabular-nums text-slate-500"
                 >
                   {String(Math.floor(m / 60)).padStart(2, '0')}:00
                 </div>
@@ -218,7 +229,7 @@ export function Calendar({
                           if ((e.target as HTMLElement).closest('button')) return;
                           const y = e.clientY - e.currentTarget.getBoundingClientRect().top;
                           const raw = DAY_START_MIN + (y / HOUR_HEIGHT) * 60;
-                          const startMin = Math.floor(raw / 30) * 30;
+                          const startMin = Math.min(DAY_END_MIN - 30, Math.max(0, Math.floor(raw / 30) * 30));
                           setCreating({
                             date: toISODate(d),
                             start: minutesToTime(startMin),
@@ -232,17 +243,14 @@ export function Calendar({
                     <div
                       key={m}
                       style={{ top: ((m - DAY_START_MIN) / 60) * HOUR_HEIGHT }}
-                      className="absolute left-0 right-0 border-t border-slate-50"
+                      className="absolute left-0 right-0 border-t border-slate-100"
                     />
                   ))}
                   {loading && <div className="absolute inset-0 animate-pulse bg-slate-50/60" />}
                   {positioned.map((item) => (
                     <TimedLessonBlock
                       key={item.lesson.id}
-                      item={{
-                        ...item,
-                        startMinutes: (item.startMinutes - DAY_START_MIN) + DAY_START_MIN,
-                      }}
+                      item={item}
                       dayStartMinutes={DAY_START_MIN}
                       onClick={(lesson) => setSelectedLessonId(lesson.id)}
                     />
@@ -268,21 +276,22 @@ export function Calendar({
               );
               const inMonth = d.getMonth() === cursor.getMonth();
               return (
-                <button
+                <div
                   key={d.toISOString()}
-                  onClick={() => {
-                    setCursor(d);
-                    setView('day');
-                  }}
                   className={clsx(
                     'flex min-h-[96px] flex-col gap-1 border-b border-r border-slate-100 p-1.5 text-left align-top last:[&:nth-child(7n)]:border-r-0',
                     !inMonth && 'bg-slate-50/60',
                     isSameDay(d, new Date()) && 'bg-brand-50/50',
                   )}
                 >
-                  <span className={clsx('text-xs font-medium', inMonth ? 'text-slate-700' : 'text-slate-300')}>
+                  <button type="button"
+                    aria-label={dayLabel(d)}
+                    onClick={() => { setCursor(d); setView('day'); }}
+                    className={clsx('self-start rounded px-1.5 py-0.5 text-xs font-medium hover:bg-brand-100',
+                      inMonth ? 'text-slate-700' : 'text-slate-500')}
+                  >
                     {d.getDate()}
-                  </span>
+                  </button>
                   <div className="flex flex-col gap-0.5">
                     {dayLessons.slice(0, 3).map((l) => (
                       <MonthLessonChip key={l.id} lesson={l} onClick={(lesson) => setSelectedLessonId(lesson.id)} />
@@ -291,7 +300,7 @@ export function Calendar({
                       <span className="px-1 text-[10px] text-slate-400">+{dayLessons.length - 3} daha</span>
                     )}
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>

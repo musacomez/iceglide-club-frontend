@@ -23,12 +23,14 @@ export function TimedLessonBlock({
   onClick: (lesson: LessonListItem) => void;
 }) {
   const top = (item.startMinutes - dayStartMinutes) * PX_PER_MINUTE;
-  const height = Math.max((item.endMinutes - item.startMinutes) * PX_PER_MINUTE, 26);
+  const height = Math.min((1440 - item.startMinutes) * PX_PER_MINUTE,
+    Math.max((item.endMinutes - item.startMinutes) * PX_PER_MINUTE, 26));
   const widthPct = 100 / item.columnCount;
   const leftPct = item.column * widthPct;
 
   return (
     <button
+      aria-label={`${formatTime(item.lesson.start_time)} ${item.lesson.title}`}
       onClick={() => onClick(item.lesson)}
       style={{
         top,

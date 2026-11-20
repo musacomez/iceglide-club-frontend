@@ -43,13 +43,14 @@ export function PaymentsList({ studentId, title = 'Ödemeler' }: { studentId: nu
     load();
   }, [load]);
 
-  const totalCents = (rows ?? []).reduce((sum, payment) => sum + getAmountCents(payment), 0);
+  const totalCents = (rows ?? []).filter((payment) => !payment.status || payment.status === 'completed')
+    .reduce((sum, payment) => sum + getAmountCents(payment), 0);
 
   return (
     <Card>
       <CardHeader
         title={title}
-        subtitle={rows && rows.length > 0 ? `Toplam: ${formatCurrency(totalCents / 100)}` : undefined}
+        subtitle={rows && rows.length > 0 ? `Tamamlanan tahsilat: ${formatCurrency(totalCents / 100)}` : undefined}
       />
       {loading && <SkeletonRows rows={3} />}
       {!loading && error && <ErrorState message={error} onRetry={load} />}
@@ -67,6 +68,8 @@ export function PaymentsList({ studentId, title = 'Ödemeler' }: { studentId: nu
                   {p.payment_method
                     ? ` · ${paymentMethodLabels[p.payment_method] ?? p.payment_method}`
                     : ''}
+                  {p.status === 'pending' && ' · Beklemede'}
+                  {p.status === 'cancelled' && ' · İptal edildi'}
                   {p.package_number ? ` · ${p.package_number}` : ''}
                 </p>
               </div>

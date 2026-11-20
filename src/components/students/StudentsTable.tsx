@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { GroupEditor } from './GroupEditor';
 import { StudentFormModal } from './StudentFormModal';
 import { api } from '@/lib/api/endpoints';
 import { ApiError } from '@/lib/api/client';
@@ -23,6 +24,7 @@ export function StudentsTable({ basePath, canManage = false }: { basePath: strin
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('active');
+  const [groupEditor, setGroupEditor] = useState<'manage' | StudentListItem | null>(null);
   const [creating, setCreating] = useState(false);
   const [rows, setRows] = useState<StudentListItem[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,7 +65,15 @@ export function StudentsTable({ basePath, canManage = false }: { basePath: strin
       ),
     },
     { key: 'level', header: 'Seviye', render: (s) => s.current_level ?? '-', hideOnMobile: true },
-    { key: 'group', header: 'Grup', render: (s) => s.current_group ?? '-', hideOnMobile: true },
+    {
+      key: 'group', header: 'Grup',
+      render: (s) => canManage ? (
+        <Button type="button" size="sm" variant="outline" aria-label={`${s.full_name} grubunu düzenle`}
+          onClick={(event) => { event.stopPropagation(); setGroupEditor(s); }}>
+          {s.current_group ?? 'Grup ata'}
+        </Button>
+      ) : s.current_group ?? '-',
+    },
     { key: 'phone', header: 'Telefon', render: (s) => s.phone ?? '-', hideOnMobile: true },
     { key: 'status', header: 'Durum', render: (s) => <Badge tone={s.status === 'active' ? 'green' : 'slate'}>{STATUS_LABEL[s.status] ?? s.status}</Badge> },
   ];
@@ -86,6 +96,7 @@ export function StudentsTable({ basePath, canManage = false }: { basePath: strin
             </Select>
           )}
         </div>
+        {canManage && <Button type="button" variant="outline" onClick={() => setGroupEditor('manage')}>Grupları Yönet</Button>}
         {canManage && (
           <Button onClick={() => setCreating(true)}>
             <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
@@ -108,6 +119,13 @@ export function StudentsTable({ basePath, canManage = false }: { basePath: strin
         />
       </div>
 
+      {canManage && groupEditor && (
+        <GroupEditor
+          student={groupEditor === 'manage' ? undefined : groupEditor}
+          onClose={() => setGroupEditor(null)}
+          onSaved={() => { setGroupEditor(null); void load(); }}
+        />
+      )}
       {canManage && creating && (
         <StudentFormModal
           onClose={() => setCreating(false)}

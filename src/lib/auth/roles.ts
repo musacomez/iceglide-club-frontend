@@ -29,7 +29,7 @@ export function navForRole(role: UserRole): NavItem[] {
         { href: '/admin/calendar', label: 'Takvim' },
         { href: '/admin/students', label: 'Öğrenciler' },
         { href: '/admin/packages', label: 'Paketler' },
-        { href: '/admin/payments', label: 'Ödemeler' },
+        { href: '/admin/payments', label: 'Finans' },
       ];
     case 'head_coach':
       return [

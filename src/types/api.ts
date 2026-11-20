@@ -60,6 +60,7 @@ export interface StudentListItem {
   registration_date: string | null;
   current_level: string | null;
   current_group: string | null;
+  current_group_id?: number | null;
   account_email: string | null;
 }
 
@@ -103,6 +104,45 @@ export interface PackageTypeOption {
   lesson_count: number;
   price_cents: number;
   validity_days: number | null;
+  lessons_per_week?: number | null;
+}
+
+export type ManagedPackageType = PackageTypeOption & { active: number };
+export type PackageTypeInput = {
+  name: string;
+  lesson_count: number;
+  lessons_per_week: number;
+  price_cents: number;
+  active: 0 | 1;
+};
+
+export type ManualChargeType = 'monthly_due' | 'private_lesson';
+export interface StudentCharge {
+  id: number;
+  charge_type: ManualChargeType | 'package';
+  description: string;
+  amount_cents: number;
+  due_date: string | null;
+  status: 'active' | 'cancelled';
+  paid_cents: number;
+  balance_cents: number;
+}
+
+export interface ManualChargeInput {
+  charge_type: ManualChargeType;
+  description: string;
+  amount_cents: number;
+  due_date: string;
+  period_start: string | null;
+  request_id: string;
+}
+
+export interface ReceiptInput {
+  amount_cents: number;
+  payment_method: 'cash' | 'bank_transfer';
+  payment_date: string;
+  description: string;
+  request_id: string;
 }
 
 export interface PackageAssignment {
@@ -180,6 +220,7 @@ export type PaymentItem = {
   payment_date: string;
   package_number: string | null;
   payment_method?: string | null;
+  status?: 'pending' | 'completed' | 'cancelled';
 } & (
   | { amount_cents: number; amount?: number }
   | { amount: number; amount_cents?: number }

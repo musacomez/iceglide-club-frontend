@@ -2,6 +2,13 @@ export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(amount);
 }
 
+export function parseLiraToCents(value: string): number | null {
+  const match = /^(\d+)(?:[.,](\d{1,2}))?$/.exec(value.trim());
+  if (!match) return null;
+  const cents = Number(match[1]) * 100 + Number((match[2] ?? '').padEnd(2, '0'));
+  return Number.isSafeInteger(cents) ? cents : null;
+}
+
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return '-';
   const date = new Date(iso.length <= 10 ? `${iso}T00:00:00` : iso);
