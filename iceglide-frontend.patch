@@ -1,0 +1,589 @@
+diff --git a/src/components/calendar/Calendar.tsx b/src/components/calendar/Calendar.tsx
+index 696533e..68ec5d4 100644
+--- a/src/components/calendar/Calendar.tsx
++++ b/src/components/calendar/Calendar.tsx
+@@ -141,7 +141,7 @@ export function Calendar({
+           </Button>
+           <h2 className="ml-1 text-sm font-semibold text-slate-900 sm:text-base">{heading}</h2>
+         </div>
+-        <div className="flex items-center gap-2">
++        <div className="flex flex-wrap items-center gap-2">
+         {canManageLessons && (
+           <Button
+             size="sm"
+@@ -191,8 +191,9 @@ export function Calendar({
+                   isSameDay(d, new Date()) && 'bg-brand-50',
+                 )}
+               >
+-                <p className="text-[11px] font-medium uppercase text-slate-400">{weekdayShort(d)}</p>
+-                <p className={clsx('text-sm font-semibold', isSameDay(d, new Date()) ? 'text-brand-700' : 'text-slate-800')}>
++                <p className="text-[11px] font-semibold uppercase text-slate-600">{weekdayShort(d)}</p>
++                <p className={clsx('mx-auto flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold',
++                  isSameDay(d, new Date()) ? 'bg-brand-600 text-white' : 'text-slate-800')}>
+                   {d.getDate()}
+                 </p>
+               </div>
+diff --git a/src/components/calendar/LessonPill.tsx b/src/components/calendar/LessonPill.tsx
+index 1544b14..7c93e9d 100644
+--- a/src/components/calendar/LessonPill.tsx
++++ b/src/components/calendar/LessonPill.tsx
+@@ -5,11 +5,37 @@ import type { LessonListItem } from '@/types/api';
+ import { formatTime } from '@/lib/utils/date';
+ import type { PositionedLesson } from './lessonLayout';
+ 
+-const STATUS_STYLES: Record<string, string> = {
+-  scheduled: 'bg-brand-50 border-brand-300 text-brand-900',
+-  completed: 'bg-emerald-50 border-emerald-300 text-emerald-900',
+-  cancelled: 'bg-slate-100 border-slate-300 text-slate-500 line-through decoration-slate-300',
+-};
++const LESSON_COLORS = [
++  'bg-sky-100 border-sky-200 border-s-sky-600 text-sky-950 hover:bg-sky-200',
++  'bg-violet-100 border-violet-200 border-s-violet-600 text-violet-950 hover:bg-violet-200',
++  'bg-emerald-100 border-emerald-200 border-s-emerald-600 text-emerald-950 hover:bg-emerald-200',
++  'bg-amber-100 border-amber-200 border-s-amber-600 text-amber-950 hover:bg-amber-200',
++  'bg-rose-100 border-rose-200 border-s-rose-600 text-rose-950 hover:bg-rose-200',
++  'bg-cyan-100 border-cyan-200 border-s-cyan-600 text-cyan-950 hover:bg-cyan-200',
++  'bg-orange-100 border-orange-200 border-s-orange-600 text-orange-950 hover:bg-orange-200',
++  'bg-fuchsia-100 border-fuchsia-200 border-s-fuchsia-600 text-fuchsia-950 hover:bg-fuchsia-200',
++];
++
++function lessonStyle(lesson: LessonListItem) {
++  return lesson.status === 'cancelled'
++    ? 'bg-slate-100 border-slate-200 border-s-slate-500 text-slate-700 line-through'
++    : LESSON_COLORS[lesson.id % LESSON_COLORS.length];
++}
++
++function lessonLabel(lesson: LessonListItem) {
++  const status = lesson.status === 'cancelled' ? ' · İptal edildi'
++    : lesson.status === 'completed' ? ' · Tamamlandı' : '';
++  return `${formatTime(lesson.start_time)} ${lesson.title}${status}`;
++}
++
++function LessonTitle({ lesson }: { lesson: LessonListItem }) {
++  return (
++    <>
++      {lesson.status === 'completed' && <span aria-hidden="true">✓ </span>}
++      {formatTime(lesson.start_time)} {lesson.title}
++    </>
++  );
++}
+ 
+ const PX_PER_MINUTE = 1;
+ 
+@@ -30,7 +56,9 @@ export function TimedLessonBlock({
+ 
+   return (
+     <button
+-      aria-label={`${formatTime(item.lesson.start_time)} ${item.lesson.title}`}
++      type="button"
++      aria-label={lessonLabel(item.lesson)}
++      title={lessonLabel(item.lesson)}
+       onClick={() => onClick(item.lesson)}
+       style={{
+         top,
+@@ -39,11 +67,11 @@ export function TimedLessonBlock({
+         width: `calc(${widthPct}% - 4px)`,
+       }}
+       className={clsx(
+-        'absolute overflow-hidden rounded-md border px-2 py-1 text-left text-[11px] leading-tight shadow-sm transition-shadow hover:shadow-md',
+-        STATUS_STYLES[item.lesson.status] ?? 'bg-slate-50 border-slate-300 text-slate-700',
++        'absolute overflow-hidden rounded-md border border-s-4 px-2 py-1 text-left text-xs leading-tight shadow-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px]',
++        lessonStyle(item.lesson),
+       )}
+     >
+-      <p className="truncate font-semibold">{formatTime(item.lesson.start_time)} {item.lesson.title}</p>
++      <p className="truncate font-semibold"><LessonTitle lesson={item.lesson} /></p>
+       {height > 34 && (
+         <p className="truncate text-[10px] opacity-80">
+           {item.lesson.instructor_name ?? 'Eğitmen atanmadı'}
+@@ -57,16 +85,19 @@ export function TimedLessonBlock({
+ export function MonthLessonChip({ lesson, onClick }: { lesson: LessonListItem; onClick: (l: LessonListItem) => void }) {
+   return (
+     <button
++      type="button"
++      aria-label={lessonLabel(lesson)}
++      title={lessonLabel(lesson)}
+       onClick={(e) => {
+         e.stopPropagation();
+         onClick(lesson);
+       }}
+       className={clsx(
+-        'block w-full truncate rounded px-1.5 py-0.5 text-left text-[10px] font-medium',
+-        STATUS_STYLES[lesson.status] ?? 'bg-slate-50 text-slate-700',
++        'block w-full truncate rounded border border-s-2 px-1 py-0.5 text-left text-[11px] font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px]',
++        lessonStyle(lesson),
+       )}
+     >
+-      {formatTime(lesson.start_time)} {lesson.title}
++      <LessonTitle lesson={lesson} />
+     </button>
+   );
+ }
+diff --git a/src/components/layout/AppShell.tsx b/src/components/layout/AppShell.tsx
+index fed62f6..5358b3e 100644
+--- a/src/components/layout/AppShell.tsx
++++ b/src/components/layout/AppShell.tsx
+@@ -14,7 +14,7 @@ export function AppShell({
+   children: React.ReactNode;
+ }) {
+   return (
+-    <div className="flex min-h-screen bg-slate-50">
++    <div className="flex min-h-screen bg-brand-50/60">
+       <Sidebar items={navItems} />
+       <div className="flex min-w-0 flex-1 flex-col">
+         <Header title={title} items={navItems} />
+diff --git a/src/components/layout/Header.tsx b/src/components/layout/Header.tsx
+index 919a767..47870e2 100644
+--- a/src/components/layout/Header.tsx
++++ b/src/components/layout/Header.tsx
+@@ -1,6 +1,6 @@
+ 'use client';
+ 
+-import { useState } from 'react';
++import { useEffect, useRef, useState } from 'react';
+ import { createPortal } from 'react-dom';
+ import { useAuth } from '@/lib/auth/AuthProvider';
+ import { ROLE_LABEL } from '@/lib/auth/roles';
+@@ -13,15 +13,31 @@ export function Header({ title, items }: { title: string; items: NavItem[] }) {
+   const { user, logout } = useAuth();
+   const [menuOpen, setMenuOpen] = useState(false);
+   const [passwordOpen, setPasswordOpen] = useState(false);
++  const mobileNav = useRef<HTMLDialogElement>(null);
+   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+ 
++  useEffect(() => {
++    const desktop = window.matchMedia('(min-width: 1024px)');
++    const closeOnDesktop = () => {
++      if (desktop.matches) mobileNav.current?.close();
++    };
++    desktop.addEventListener('change', closeOnDesktop);
++    return () => desktop.removeEventListener('change', closeOnDesktop);
++  }, []);
++
+   return (
+-    <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:px-6">
++    <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-brand-100 bg-white px-4 py-3 sm:px-6">
+       <div className="flex items-center gap-3">
+         <button
+-          className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden"
+-          onClick={() => setMobileNavOpen(true)}
++          type="button"
++          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-800 hover:bg-brand-100 lg:hidden"
++          onClick={() => {
++            mobileNav.current?.showModal();
++            setMobileNavOpen(true);
++          }}
+           aria-label="Menüyü aç"
++          aria-expanded={mobileNavOpen}
++          aria-controls="mobile-navigation"
+         >
+           <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
+             <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+@@ -67,26 +83,33 @@ export function Header({ title, items }: { title: string; items: NavItem[] }) {
+         )}
+       </div>
+ 
+-      {mobileNavOpen && (
+-        <div className="fixed inset-0 z-40 flex lg:hidden">
+-          <div className="w-72 flex-col gap-6 bg-white py-6 shadow-popover flex">
+-            <div className="flex items-center justify-between px-3">
++      <dialog
++        ref={mobileNav}
++        id="mobile-navigation"
++        aria-label="Ana menü"
++        onClose={() => setMobileNavOpen(false)}
++        onClick={(event) => {
++          if (event.target === event.currentTarget) mobileNav.current?.close();
++        }}
++        className="fixed inset-0 m-0 h-full max-h-none w-full max-w-none bg-transparent p-0 backdrop:bg-slate-950/50"
++      >
++          <div className="flex h-full w-[min(20rem,calc(100%-2rem))] flex-col gap-5 overflow-y-auto overscroll-contain bg-white py-5 shadow-popover">
++            <div className="flex items-center justify-between gap-2 border-b border-brand-100 px-3 pb-4">
+               <LogoMark />
+               <button
+-                onClick={() => setMobileNavOpen(false)}
+-                aria-label="Kapat"
+-                className="rounded-full p-1 text-slate-400 hover:bg-slate-100"
++                type="button"
++                onClick={() => mobileNav.current?.close()}
++                aria-label="Menüyü kapat"
++                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-700 hover:bg-brand-50"
+               >
+                 <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
+                   <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                 </svg>
+               </button>
+             </div>
+-            <SidebarNav items={items} onNavigate={() => setMobileNavOpen(false)} />
++            <SidebarNav items={items} onNavigate={() => mobileNav.current?.close()} />
+           </div>
+-          <div className="flex-1 bg-slate-900/40" onClick={() => setMobileNavOpen(false)} />
+-        </div>
+-      )}
++      </dialog>
+       {passwordOpen && createPortal(
+         <ChangePasswordModal onClose={() => setPasswordOpen(false)} />,
+         document.body,
+diff --git a/src/components/layout/Sidebar.tsx b/src/components/layout/Sidebar.tsx
+index c956a1a..91a2997 100644
+--- a/src/components/layout/Sidebar.tsx
++++ b/src/components/layout/Sidebar.tsx
+@@ -8,7 +8,7 @@ import type { NavItem } from '@/lib/auth/roles';
+ function LogoMark() {
+   return (
+     <div className="flex items-center gap-2 px-1">
+-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-white shadow-sm">
++      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white shadow-sm">
+         <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
+           <path
+             d="M12 2v20M5 7l7-5 7 5M5 17l7 5 7-5M2 12h20"
+@@ -20,7 +20,7 @@ function LogoMark() {
+       </div>
+       <div className="leading-tight">
+         <p className="text-sm font-semibold text-slate-900">IceGlide</p>
+-        <p className="text-[11px] text-slate-400">Kulüp Yönetimi</p>
++        <p className="text-xs text-slate-600">Kulüp Yönetimi</p>
+       </div>
+     </div>
+   );
+@@ -28,18 +28,22 @@ function LogoMark() {
+ 
+ export function SidebarNav({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => void }) {
+   const pathname = usePathname();
++  const current = items.reduce<NavItem | undefined>((match, item) =>
++    (pathname === item.href || pathname?.startsWith(`${item.href}/`)) &&
++    (!match || item.href.length > match.href.length) ? item : match, undefined);
+   return (
+-    <nav className="flex flex-1 flex-col gap-1 px-3">
++    <nav aria-label="Ana menü" className="flex flex-1 flex-col gap-1 px-3">
+       {items.map((item) => {
+-        const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
++        const active = item === current;
+         return (
+           <Link
+             key={item.href}
+             href={item.href}
++            aria-current={active ? 'page' : undefined}
+             onClick={onNavigate}
+             className={clsx(
+-              'rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+-              active ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
++              'rounded-lg px-3 py-3 text-sm font-semibold transition-colors lg:py-2.5',
++              active ? 'bg-brand-600 text-white' : 'text-slate-700 hover:bg-brand-50 hover:text-brand-800',
+             )}
+           >
+             {item.label}
+@@ -52,7 +56,7 @@ export function SidebarNav({ items, onNavigate }: { items: NavItem[]; onNavigate
+ 
+ export function Sidebar({ items }: { items: NavItem[] }) {
+   return (
+-    <aside className="hidden w-60 shrink-0 flex-col gap-6 border-r border-slate-200 bg-white py-6 lg:flex">
++    <aside className="hidden w-60 shrink-0 flex-col gap-6 border-r border-brand-100 bg-white px-2 py-6 lg:flex">
+       <LogoMark />
+       <SidebarNav items={items} />
+     </aside>
+diff --git a/src/components/packages/PackageLessonAdjustmentModal.tsx b/src/components/packages/PackageLessonAdjustmentModal.tsx
+new file mode 100644
+index 0000000..2518265
+--- /dev/null
++++ b/src/components/packages/PackageLessonAdjustmentModal.tsx
+@@ -0,0 +1,94 @@
++'use client';
++
++import { useRef, useState, type FormEvent } from 'react';
++import { Button } from '@/components/ui/Button';
++import { Input } from '@/components/ui/Input';
++import { Modal } from '@/components/ui/Modal';
++import { Select } from '@/components/ui/Select';
++import { Textarea } from '@/components/ui/Textarea';
++import { ApiError } from '@/lib/api/client';
++import { api } from '@/lib/api/endpoints';
++import type { PackageItem } from '@/types/api';
++
++export function PackageLessonAdjustmentModal({ studentId, pack, onClose, onSaved }: {
++  studentId: number;
++  pack: PackageItem;
++  onClose: (refresh: boolean) => void;
++  onSaved: () => void;
++}) {
++  const [operation, setOperation] = useState('add');
++  const [quantity, setQuantity] = useState('1');
++  const [reason, setReason] = useState('');
++  const [error, setError] = useState('');
++  const [saving, setSaving] = useState(false);
++  const [needsRefresh, setNeedsRefresh] = useState(false);
++  const pending = useRef(false);
++  const requests = useRef(new Map<string, string>());
++
++  const count = Number(quantity);
++  const delta = operation === 'remove' ? -count : count;
++  const remaining = pack.remaining_lessons + delta;
++  const validQuantity = Number.isSafeInteger(count) && count > 0 && Number.isSafeInteger(remaining) && remaining >= 0;
++
++  function close() {
++    if (!pending.current) onClose(needsRefresh);
++  }
++
++  async function submit(event: FormEvent<HTMLFormElement>) {
++    event.preventDefault();
++    const explanation = reason.trim();
++    if (pending.current || needsRefresh || !validQuantity || !explanation) return;
++
++    const key = JSON.stringify([delta, explanation]);
++    const requestId = requests.current.get(key) ?? crypto.randomUUID();
++    requests.current.set(key, requestId);
++    pending.current = true;
++    setSaving(true);
++    setError('');
++    try {
++      await api.adjustPackageLessons(studentId, pack.id, {
++        quantity_delta: delta,
++        expected_remaining_lessons: pack.remaining_lessons,
++        reason: explanation,
++        request_id: requestId,
++      });
++      onSaved();
++    } catch (err) {
++      setError(err instanceof ApiError ? err.message : 'Ders hakkı güncellenemedi.');
++      setNeedsRefresh(err instanceof ApiError && err.status === 409);
++    } finally {
++      pending.current = false;
++      setSaving(false);
++    }
++  }
++
++  return (
++    <Modal open onClose={close} title="Ders Hakkını Düzenle">
++      <form onSubmit={submit} className="flex flex-col gap-4" aria-busy={saving}>
++        <p className="text-sm text-slate-700">{pack.package_type_name} · Kalan ders: {pack.remaining_lessons}</p>
++        <Select name="lesson-adjustment-operation" label="İşlem" value={operation} disabled={saving}
++          onChange={(event) => setOperation(event.target.value)}>
++          <option value="add">Ders hakkı ekle</option>
++          <option value="remove">Ders hakkı düş</option>
++        </Select>
++        <Input name="lesson-adjustment-quantity" type="number" label="Ders adedi" required min={1} step={1}
++          max={operation === 'remove' ? pack.remaining_lessons : undefined} value={quantity} readOnly={saving}
++          onChange={(event) => setQuantity(event.target.value)} />
++        <Textarea name="lesson-adjustment-reason" label="İşlem açıklaması" value={reason} required maxLength={180}
++          readOnly={saving} onChange={(event) => setReason(event.target.value)} />
++        <p className="text-sm text-slate-700" aria-live="polite">
++          {validQuantity ? `İşlem sonrası kalan ders: ${remaining}` : 'Geçerli bir ders adedi girin.'}
++        </p>
++        {error && <p role="alert" className="text-sm text-rose-700">{error}</p>}
++        <div className="flex justify-end gap-2">
++          <Button type="button" variant="secondary" disabled={saving} onClick={close}>
++            {needsRefresh ? 'Kapat ve Yenile' : 'Vazgeç'}
++          </Button>
++          <Button type="submit" loading={saving} disabled={needsRefresh || !validQuantity || !reason.trim()}>
++            Kaydet
++          </Button>
++        </div>
++      </form>
++    </Modal>
++  );
++}
+diff --git a/src/components/packages/PackagesList.tsx b/src/components/packages/PackagesList.tsx
+index 2f2f29f..dd88117 100644
+--- a/src/components/packages/PackagesList.tsx
++++ b/src/components/packages/PackagesList.tsx
+@@ -9,16 +9,18 @@ import { PackageStatusBadge } from '@/components/ui/Badge';
+ import { Button } from '@/components/ui/Button';
+ import { useToast } from '@/components/ui/Toast';
+ import { PackageAssignmentModal } from './PackageAssignmentModal';
++import { PackageLessonAdjustmentModal } from './PackageLessonAdjustmentModal';
+ import { api } from '@/lib/api/endpoints';
+ import { ApiError } from '@/lib/api/client';
+ import type { PackageItem } from '@/types/api';
+ import { formatDate } from '@/lib/utils/format';
+ 
+ export function PackagesList({
+-  studentId, title = 'Paketler', canAssign = false,
+-}: { studentId: number; title?: string; canAssign?: boolean }) {
++  studentId, title = 'Paketler', canAssign = false, canAdjustLessons = false,
++}: { studentId: number; title?: string; canAssign?: boolean; canAdjustLessons?: boolean }) {
+   const { push } = useToast();
+   const [assigning, setAssigning] = useState(false);
++  const [adjusting, setAdjusting] = useState<PackageItem | null>(null);
+   const [rows, setRows] = useState<PackageItem[] | null>(null);
+   const [loading, setLoading] = useState(true);
+   const [error, setError] = useState<string | null>(null);
+@@ -39,6 +41,8 @@ export function PackagesList({
+     load();
+   }, [load]);
+ 
++  const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Istanbul' }).format(new Date());
++
+   return (
+     <Card>
+       <CardHeader
+@@ -70,10 +74,18 @@ export function PackagesList({
+                   <div className="text-right">
+                     <p className="text-sm font-semibold text-slate-900">{p.remaining_lessons} ders kaldı</p>
+                     {typeof totalLessons === 'number' && totalLessons > 0 && (
+-                      <p className="text-xs text-slate-400">/ {totalLessons} toplam</p>
++                      <p className="text-xs text-slate-400">
++                        {canAdjustLessons ? `Paket kapsamı: ${totalLessons} ders` : `/ ${totalLessons} toplam`}
++                      </p>
+                     )}
+                   </div>
+                   <PackageStatusBadge status={p.status} />
++                  {canAdjustLessons && p.status === 'active' && (!p.expires_at || p.expires_at.slice(0, 10) >= today) && (
++                    <Button type="button" size="sm" variant="secondary" onClick={() => setAdjusting(p)}
++                      aria-label={`${p.package_type_name} ders hakkını düzenle`}>
++                      Ders Hakkını Düzenle
++                    </Button>
++                  )}
+                 </div>
+               </div>
+             );
+@@ -91,6 +103,21 @@ export function PackagesList({
+           }}
+         />
+       )}
++      {canAdjustLessons && adjusting && (
++        <PackageLessonAdjustmentModal
++          studentId={studentId}
++          pack={adjusting}
++          onClose={(refresh) => {
++            setAdjusting(null);
++            if (refresh) void load();
++          }}
++          onSaved={() => {
++            setAdjusting(null);
++            push('Ders hakkı güncellendi.', 'success');
++            void load();
++          }}
++        />
++      )}
+     </Card>
+   );
+ }
+diff --git a/src/components/payments/PaymentsList.tsx b/src/components/payments/PaymentsList.tsx
+index b50f46b..fa00a01 100644
+--- a/src/components/payments/PaymentsList.tsx
++++ b/src/components/payments/PaymentsList.tsx
+@@ -23,7 +23,15 @@ function getAmountCents(payment: PaymentItem): number {
+   return Math.round(payment.amount * 100);
+ }
+ 
+-export function PaymentsList({ studentId, title = 'Ödemeler' }: { studentId: number; title?: string }) {
++export function PaymentsList({
++  studentId,
++  title = 'Ödemeler',
++  showDescription = false,
++}: {
++  studentId: number;
++  title?: string;
++  showDescription?: boolean;
++}) {
+   const [rows, setRows] = useState<PaymentItem[] | null>(null);
+   const [loading, setLoading] = useState(true);
+   const [error, setError] = useState<string | null>(null);
+@@ -62,7 +70,7 @@ export function PaymentsList({ studentId, title = 'Ödemeler' }: { studentId: nu
+         <div className="divide-y divide-slate-100">
+           {rows.map((p) => (
+             <div key={p.id} className="flex items-center justify-between px-5 py-3.5">
+-              <div>
++              <div className="min-w-0">
+                 <p className="text-sm font-medium text-slate-900">{formatCurrency(getAmountCents(p) / 100)}</p>
+                 <p className="text-xs text-slate-500">
+                   {formatDate(p.payment_date)}
+@@ -71,6 +79,12 @@ export function PaymentsList({ studentId, title = 'Ödemeler' }: { studentId: nu
+                   {p.status === 'cancelled' && ' · İptal edildi'}
+                   {p.package_number ? ` · ${p.package_number}` : ''}
+                 </p>
++                {showDescription && p.description?.trim() && (
++                  <p className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-700">
++                    <span className="font-medium">Açıklama: </span>
++                    {p.description}
++                  </p>
++                )}
+               </div>
+             </div>
+           ))}
+diff --git a/src/components/students/StudentDetailView.tsx b/src/components/students/StudentDetailView.tsx
+index 2c1770c..976dfe6 100644
+--- a/src/components/students/StudentDetailView.tsx
++++ b/src/components/students/StudentDetailView.tsx
+@@ -136,8 +136,14 @@ export function StudentDetailView({
+         </Card>
+       </div>
+ 
+-      <PackagesList studentId={studentId} canAssign={canManage && s.status === 'active'} />
+-      {showPayments && <PaymentsList studentId={studentId} />}
++      <PackagesList studentId={studentId} canAssign={canManage && s.status === 'active'} canAdjustLessons={canManage} />
++      {showPayments && (
++        <PaymentsList
++          studentId={studentId}
++          title={canManage ? 'Ödeme Geçmişi' : undefined}
++          showDescription={canManage}
++        />
++      )}
+ 
+       {canManage && editing && (
+         <StudentFormModal detail={detail} onClose={() => setEditing(false)} onSaved={() => load()} />
+diff --git a/src/lib/api/endpoints.ts b/src/lib/api/endpoints.ts
+index 27273a6..9b7e62a 100644
+--- a/src/lib/api/endpoints.ts
++++ b/src/lib/api/endpoints.ts
+@@ -56,6 +56,15 @@ export const api = {
+   listStudentPackages: (studentId: number) =>
+     apiRequest<PackageItem[]>(`/api/packages/student/${studentId}`),
+ 
++  adjustPackageLessons: (studentId: number, packageId: number, body: {
++    quantity_delta: number;
++    expected_remaining_lessons: number;
++    reason: string;
++    request_id: string;
++  }) => apiRequest<{ remaining_lessons: number }>(
++    `/api/packages/student/${studentId}/${packageId}/lesson-adjustments`, { method: 'POST', body },
++  ),
++
+   listPackageTypes: () => apiRequest<PackageTypeOption[]>('/api/packages/types'),
+ 
+   assignStudentPackage: (studentId: number, body: PackageAssignment) =>
+diff --git a/src/types/api.ts b/src/types/api.ts
+index 5640281..04a1035 100644
+--- a/src/types/api.ts
++++ b/src/types/api.ts
+@@ -220,6 +220,7 @@ export type PaymentItem = {
+   student_id: number;
+   package_id: number | null;
+   payment_date: string;
++  description?: string | null;
+   package_number: string | null;
+   payment_method?: PaymentMethod | null;
+   status?: 'pending' | 'completed' | 'cancelled';
+diff --git a/tailwind.config.ts b/tailwind.config.ts
+index 10cb85b..54505cd 100644
+--- a/tailwind.config.ts
++++ b/tailwind.config.ts
+@@ -6,17 +6,17 @@ const config: Config = {
+     extend: {
+       colors: {
+         brand: {
+-          50: '#eff8ff',
+-          100: '#dbeffe',
+-          200: '#bfe5fe',
+-          300: '#93d5fd',
+-          400: '#5fbdfa',
+-          500: '#3aa1f2',
+-          600: '#2681e6',
+-          700: '#1f68d1',
+-          800: '#1f54a9',
+-          900: '#1f4885',
+-          950: '#182d51',
++          50: '#eef4ff',
++          100: '#dce8ff',
++          200: '#b9d1ff',
++          300: '#8aafff',
++          400: '#577fff',
++          500: '#365dff',
++          600: '#2547df',
++          700: '#2039b5',
++          800: '#1e3294',
++          900: '#1c2e75',
++          950: '#141e4e',
+         },
+         ice: {
+           50: '#f4fbfd',
