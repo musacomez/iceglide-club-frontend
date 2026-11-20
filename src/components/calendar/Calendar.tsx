@@ -141,7 +141,7 @@ export function Calendar({
           </Button>
           <h2 className="ml-1 text-sm font-semibold text-slate-900 sm:text-base">{heading}</h2>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
         {canManageLessons && (
           <Button
             size="sm"
@@ -191,8 +191,9 @@ export function Calendar({
                   isSameDay(d, new Date()) && 'bg-brand-50',
                 )}
               >
-                <p className="text-[11px] font-medium uppercase text-slate-400">{weekdayShort(d)}</p>
-                <p className={clsx('text-sm font-semibold', isSameDay(d, new Date()) ? 'text-brand-700' : 'text-slate-800')}>
+                <p className="text-[11px] font-semibold uppercase text-slate-600">{weekdayShort(d)}</p>
+                <p className={clsx('mx-auto flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold',
+                  isSameDay(d, new Date()) ? 'bg-brand-600 text-white' : 'text-slate-800')}>
                   {d.getDate()}
                 </p>
               </div>

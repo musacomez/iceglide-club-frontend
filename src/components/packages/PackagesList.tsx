@@ -9,16 +9,18 @@ import { PackageStatusBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { PackageAssignmentModal } from './PackageAssignmentModal';
+import { PackageLessonAdjustmentModal } from './PackageLessonAdjustmentModal';
 import { api } from '@/lib/api/endpoints';
 import { ApiError } from '@/lib/api/client';
 import type { PackageItem } from '@/types/api';
 import { formatDate } from '@/lib/utils/format';
 
 export function PackagesList({
-  studentId, title = 'Paketler', canAssign = false,
-}: { studentId: number; title?: string; canAssign?: boolean }) {
+  studentId, title = 'Paketler', canAssign = false, canAdjustLessons = false,
+}: { studentId: number; title?: string; canAssign?: boolean; canAdjustLessons?: boolean }) {
   const { push } = useToast();
   const [assigning, setAssigning] = useState(false);
+  const [adjusting, setAdjusting] = useState<PackageItem | null>(null);
   const [rows, setRows] = useState<PackageItem[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadedStudentId, setLoadedStudentId] = useState<number | null>(null);
@@ -62,6 +64,7 @@ export function PackagesList({
   }, [studentId]);
 
   const isLoading = loading || loadedStudentId !== studentId;
+  const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Istanbul' }).format(new Date());
 
   return (
     <Card>
@@ -90,14 +93,22 @@ export function PackagesList({
                     {p.expires_at ? ` · Bitiş: ${formatDate(p.expires_at)}` : ''}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <div className="text-right">
                     <p className="text-sm font-semibold text-slate-900">{p.remaining_lessons} ders kaldı</p>
                     {typeof totalLessons === 'number' && totalLessons > 0 && (
-                      <p className="text-xs text-slate-400">/ {totalLessons} toplam</p>
+                      <p className="text-xs text-slate-400">
+                        {canAdjustLessons ? `Paket kapsamı: ${totalLessons} ders` : `/ ${totalLessons} toplam`}
+                      </p>
                     )}
                   </div>
                   <PackageStatusBadge status={p.status} />
+                  {canAdjustLessons && p.status === 'active' && (!p.expires_at || p.expires_at.slice(0, 10) >= today) && (
+                    <Button type="button" size="sm" variant="secondary" onClick={() => setAdjusting(p)}
+                      aria-label={`${p.package_type_name} ders hakkını düzenle`}>
+                      Ders Hakkını Düzenle
+                    </Button>
+                  )}
                 </div>
               </div>
             );
@@ -111,6 +122,21 @@ export function PackagesList({
           onSaved={(chargeId) => {
             setAssigning(false);
             push(chargeId === null ? 'Paket atandı.' : 'Paket atandı ve öğrenci borcu oluşturuldu.', 'success');
+            refresh();
+          }}
+        />
+      )}
+      {canAdjustLessons && adjusting && (
+        <PackageLessonAdjustmentModal
+          studentId={studentId}
+          pack={adjusting}
+          onClose={(refreshAfterClose) => {
+            setAdjusting(null);
+            if (refreshAfterClose) refresh();
+          }}
+          onSaved={() => {
+            setAdjusting(null);
+            push('Ders hakkı güncellendi.', 'success');
             refresh();
           }}
         />

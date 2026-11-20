@@ -158,7 +158,11 @@ export function StudentDetailView({
         </Card>
       </div>
 
-      <PackagesList studentId={studentId} canAssign={canManage && s.status === 'active'} />
+      <PackagesList
+        studentId={studentId}
+        canAssign={canManage && s.status === 'active'}
+        canAdjustLessons={canManage}
+      />
       {showPayments && (
         <PaymentsList
           studentId={studentId}

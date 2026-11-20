@@ -56,6 +56,15 @@ export const api = {
   listStudentPackages: (studentId: number) =>
     apiRequest<PackageItem[]>(`/api/packages/student/${studentId}`),
 
+  adjustPackageLessons: (studentId: number, packageId: number, body: {
+    quantity_delta: number;
+    expected_remaining_lessons: number;
+    reason: string;
+    request_id: string;
+  }) => apiRequest<{ remaining_lessons: number }>(
+    `/api/packages/student/${studentId}/${packageId}/lesson-adjustments`, { method: 'POST', body },
+  ),
+
   listPackageTypes: () => apiRequest<PackageTypeOption[]>('/api/packages/types'),
 
   assignStudentPackage: (studentId: number, body: PackageAssignment) =>
