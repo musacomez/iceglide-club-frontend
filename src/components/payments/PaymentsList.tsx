@@ -10,6 +10,18 @@ import { ApiError } from '@/lib/api/client';
 import type { PaymentItem } from '@/types/api';
 import { formatCurrency, formatDate } from '@/lib/utils/format';
 
+const paymentMethodLabels: Record<string, string> = {
+  cash: 'Nakit',
+  bank_transfer: 'Havale',
+  card: 'Kart',
+  online: 'Çevrim içi',
+  other: 'Diğer',
+};
+
+function getAmountCents(payment: PaymentItem): number {
+  return payment.amount_cents ?? Math.round((payment.amount ?? 0) * 100);
+}
+
 export function PaymentsList({ studentId, title = 'Ödemeler' }: { studentId: number; title?: string }) {
   const [rows, setRows] = useState<PaymentItem[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,13 +43,13 @@ export function PaymentsList({ studentId, title = 'Ödemeler' }: { studentId: nu
     load();
   }, [load]);
 
-  const total = (rows ?? []).reduce((sum, p) => sum + p.amount, 0);
+  const totalCents = (rows ?? []).reduce((sum, payment) => sum + getAmountCents(payment), 0);
 
   return (
     <Card>
       <CardHeader
         title={title}
-        subtitle={rows && rows.length > 0 ? `Toplam: ${formatCurrency(total)}` : undefined}
+        subtitle={rows && rows.length > 0 ? `Toplam: ${formatCurrency(totalCents / 100)}` : undefined}
       />
       {loading && <SkeletonRows rows={3} />}
       {!loading && error && <ErrorState message={error} onRetry={load} />}
@@ -49,8 +61,14 @@ export function PaymentsList({ studentId, title = 'Ödemeler' }: { studentId: nu
           {rows.map((p) => (
             <div key={p.id} className="flex items-center justify-between px-5 py-3.5">
               <div>
-                <p className="text-sm font-medium text-slate-900">{formatCurrency(p.amount)}</p>
-                <p className="text-xs text-slate-500">{formatDate(p.payment_date)}{p.package_number ? ` · ${p.package_number}` : ''}</p>
+                <p className="text-sm font-medium text-slate-900">{formatCurrency(getAmountCents(p) / 100)}</p>
+                <p className="text-xs text-slate-500">
+                  {formatDate(p.payment_date)}
+                  {p.payment_method
+                    ? ` · ${paymentMethodLabels[p.payment_method] ?? p.payment_method}`
+                    : ''}
+                  {p.package_number ? ` · ${p.package_number}` : ''}
+                </p>
               </div>
             </div>
           ))}

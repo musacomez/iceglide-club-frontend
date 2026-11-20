@@ -155,14 +155,17 @@ export interface AttendanceRecord {
   updated_at: string | null;
 }
 
-export interface PaymentItem {
+export type PaymentItem = {
   id: number;
   student_id: number;
   package_id: number | null;
-  amount: number;
   payment_date: string;
   package_number: string | null;
-}
+  payment_method?: string | null;
+} & (
+  | { amount_cents: number; amount?: number }
+  | { amount: number; amount_cents?: number }
+);
 
 export interface CreateAttendanceInput {
   lesson_instance_id: number;
