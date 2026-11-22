@@ -1,4 +1,5 @@
 import { apiRequest } from './client';
+import type { ClubMessagePage } from '@/types/club-chat';
 import type {
   AttendanceRecord,
   CoachInput,
@@ -37,6 +38,15 @@ export const api = {
     }),
 
   me: () => apiRequest<Me>('/api/me'),
+
+  listClubMessages: (before?: number) =>
+    apiRequest<ClubMessagePage>('/api/club-chat/messages', { query: { before } }),
+
+  sendClubMessage: (message: string) =>
+    apiRequest<{ id: number }>('/api/club-chat/messages', { method: 'POST', body: { message } }),
+
+  hideClubMessage: (id: number) =>
+    apiRequest<{ id: number }>(`/api/club-chat/messages/${id}`, { method: 'DELETE' }),
 
   dashboardSummary: () => apiRequest<DashboardSummary>('/api/dashboard/summary'),
 

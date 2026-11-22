@@ -22,6 +22,10 @@ export interface NavItem {
 }
 
 export function navForRole(role: UserRole): NavItem[] {
+  return [...roleNav(role), { href: '/chat', label: 'Kulüp Sohbeti' }];
+}
+
+function roleNav(role: UserRole): NavItem[] {
   switch (role) {
     case 'admin':
       return [
