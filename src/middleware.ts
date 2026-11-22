@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isNotificationPath } from '@/lib/auth/roles';
 
 // Cheap, cookie-presence-only check so a signed-out visitor is bounced to
 // /login before the page even renders. This is NOT the real authorization -
@@ -16,6 +17,9 @@ export function middleware(request: NextRequest) {
   if (!hasSession && pathname !== '/') {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
+    if (request.nextUrl.searchParams.get('from') === 'notification' && isNotificationPath(pathname)) {
+      url.searchParams.set('next', pathname);
+    }
     return NextResponse.redirect(url);
   }
 

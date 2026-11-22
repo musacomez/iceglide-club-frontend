@@ -1,16 +1,25 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { sessionDestination } from '@/lib/auth/roles';
 import { useAuth } from '@/lib/auth/AuthProvider';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, user, status } = useAuth();
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (status === 'authenticated' && user) {
+      router.replace(sessionDestination(user.role, new URLSearchParams(window.location.search).get('next')));
+    }
+  }, [router, status, user]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();

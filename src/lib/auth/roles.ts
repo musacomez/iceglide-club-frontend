@@ -74,3 +74,11 @@ function roleNav(role: UserRole): NavItem[] {
 export function sectionForRole(role: UserRole): string {
   return ROLE_HOME[role];
 }
+
+export function isNotificationPath(path: string | null): path is '/chat' | '/student' | '/student/payments' {
+  return path === '/chat' || path === '/student' || path === '/student/payments';
+}
+
+export function sessionDestination(role: UserRole, next: string | null): string {
+  return isNotificationPath(next) && (next === '/chat' || role === 'student') ? next : ROLE_HOME[role];
+}

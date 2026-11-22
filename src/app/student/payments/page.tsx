@@ -1,5 +1,6 @@
 'use client';
 
+import { OpenCharges } from '@/components/payments/OpenCharges';
 import { RoleGuard } from '@/components/layout/RoleGuard';
 import { PaymentsList } from '@/components/payments/PaymentsList';
 import { SkeletonRows } from '@/components/ui/Skeleton';
@@ -15,7 +16,12 @@ export default function StudentPaymentsPage() {
       {loading && <SkeletonRows rows={3} />}
       {!loading && error && <ErrorState message={error} />}
       {!loading && !error && !student && <EmptyState title="Öğrenci kaydı bulunamadı" />}
-      {!loading && !error && student && <PaymentsList studentId={student.id} />}
+      {!loading && !error && student && (
+        <div className="flex flex-col gap-5">
+          <OpenCharges />
+          <PaymentsList studentId={student.id} />
+        </div>
+      )}
     </RoleGuard>
   );
 }

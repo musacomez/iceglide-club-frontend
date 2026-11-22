@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api/endpoints';
 import { ApiError } from '@/lib/api/client';
 import { clearToken, getToken, setToken } from '@/lib/api/client';
-import { ROLE_HOME } from '@/lib/auth/roles';
+import { deleteLocalPushSubscription } from '@/lib/push-device';
+import { sessionDestination } from '@/lib/auth/roles';
 import type { Me } from '@/types/api';
 
 interface AuthContextValue {
@@ -57,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const me = await api.me();
         setUser(me);
         setStatus('authenticated');
-        router.replace(ROLE_HOME[me.role]);
+        router.replace(sessionDestination(me.role, new URLSearchParams(window.location.search).get('next')));
       } catch (err) {
         const message = err instanceof ApiError ? err.message : 'Sunucuya bağlanılamadı.';
         setError(message);
@@ -68,10 +69,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const logout = useCallback(() => {
-    clearToken();
-    setUser(null);
-    setStatus('unauthenticated');
-    router.replace('/login');
+    void (async () => {
+      await deleteLocalPushSubscription().catch(() => {});
+      clearToken();
+      setUser(null);
+      setStatus('unauthenticated');
+      router.replace('/login');
+    })();
   }, [router]);
 
   const value = useMemo(

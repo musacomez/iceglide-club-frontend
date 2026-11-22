@@ -39,6 +39,19 @@ export const api = {
 
   me: () => apiRequest<Me>('/api/me'),
 
+  listOwnOpenCharges: () => apiRequest<StudentCharge[]>('/api/finance/me/open-charges'),
+
+  pushSettings: () => apiRequest<{ public_key: string | null }>('/api/push/settings'),
+
+  savePushDevice: (body: PushSubscriptionJSON) =>
+    apiRequest<{ enabled: boolean }>('/api/push/device', { method: 'PUT', body }),
+
+  deletePushDevice: (endpoint: string) =>
+    apiRequest<{ enabled: boolean }>('/api/push/device', { method: 'DELETE', body: { endpoint } }),
+
+  notifyStudent: (id: number) =>
+    apiRequest<{ queued: number }>(`/api/students/${id}/notify`, { method: 'POST' }),
+
   listClubMessages: (before?: number) =>
     apiRequest<ClubMessagePage>('/api/club-chat/messages', { query: { before } }),
 

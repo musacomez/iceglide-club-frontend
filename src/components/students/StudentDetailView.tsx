@@ -6,6 +6,7 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { StudentNotificationButton } from './StudentNotificationButton';
 import { StudentAccountCard } from './StudentAccountCard';
 import { StudentFormModal } from './StudentFormModal';
 import { PackagesList } from '@/components/packages/PackagesList';
@@ -98,6 +99,7 @@ export function StudentDetailView({
               {s.current_group ?? 'Gruba atanmadı'}
             </p>
           </div>
+          {canManageAccount && <StudentNotificationButton studentId={studentId} />}
           {canManage && (
             <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
               <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">

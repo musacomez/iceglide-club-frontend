@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthProvider';
-import { ROLE_HOME, navForRole } from '@/lib/auth/roles';
+import { ROLE_HOME, isNotificationPath, navForRole } from '@/lib/auth/roles';
 import type { UserRole } from '@/types/api';
 import { AppShell } from './AppShell';
 
@@ -25,8 +25,12 @@ export function RoleGuard({
   const allowed = Array.isArray(role) ? role : [role];
 
   useEffect(() => {
-    if (status === 'unauthenticated') router.replace('/login');
-    else if (status === 'authenticated' && user && !allowed.includes(user.role)) {
+    if (status === 'unauthenticated') {
+      const { pathname, search } = window.location;
+      const fromNotification = new URLSearchParams(search).get('from') === 'notification';
+      router.replace(fromNotification && isNotificationPath(pathname)
+        ? `/login?next=${encodeURIComponent(pathname)}` : '/login');
+    } else if (status === 'authenticated' && user && !allowed.includes(user.role)) {
       router.replace(ROLE_HOME[user.role]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
