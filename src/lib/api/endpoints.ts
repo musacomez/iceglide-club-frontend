@@ -45,6 +45,14 @@ export const api = {
 
   getStudent: (id: number) => apiRequest<StudentDetail>(`/api/students/${id}`),
 
+  getStudentAccount: (id: number) =>
+    apiRequest<{ email: string | null; active: boolean | null }>(`/api/students/${id}/account`),
+
+  saveStudentAccount: (id: number, create: boolean, body: { email: string; password?: string }) =>
+    apiRequest<{ email: string; active: boolean }>(`/api/students/${id}/account`, {
+      method: create ? 'POST' : 'PATCH', body,
+    }),
+
   listLessons: (from: string, to: string) =>
     apiRequest<LessonListItem[]>('/api/lessons', { query: { from, to } }),
 

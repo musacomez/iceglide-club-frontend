@@ -6,6 +6,7 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { StudentAccountCard } from './StudentAccountCard';
 import { StudentFormModal } from './StudentFormModal';
 import { PackagesList } from '@/components/packages/PackagesList';
 import { PaymentsList } from '@/components/payments/PaymentsList';
@@ -24,10 +25,12 @@ export function StudentDetailView({
   studentId,
   showPayments = true,
   canManage = false,
+  canManageAccount = false,
 }: {
   studentId: number;
   showPayments?: boolean;
   canManage?: boolean;
+  canManageAccount?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [detail, setDetail] = useState<StudentDetail | null>(null);
@@ -117,6 +120,8 @@ export function StudentDetailView({
           <Field label="Kayıt tarihi" value={formatDate(s.registration_date as string | null)} />
         </div>
       </Card>
+
+      {canManageAccount && <StudentAccountCard key={studentId} studentId={studentId} />}
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <Card>
