@@ -44,7 +44,7 @@ export default function LoginPage() {
             </svg>
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-slate-900">IceGlide Club</h1>
+            <h1 className="text-xl font-semibold text-slate-900">Atak Buz Sporları</h1>
             <p className="text-sm text-slate-500">Kulüp yönetim sistemine giriş yapın</p>
           </div>
         </div>
@@ -56,7 +56,7 @@ export default function LoginPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="ornek@iceglide.club"
+            placeholder="ornek@example.com"
           />
           <Input
             label="Parola"

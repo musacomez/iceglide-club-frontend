@@ -19,7 +19,7 @@ function LogoMark() {
         </svg>
       </div>
       <div className="leading-tight">
-        <p className="text-sm font-semibold text-slate-900">IceGlide</p>
+        <p className="text-sm font-semibold text-slate-900">Atak Buz Sporları</p>
         <p className="text-xs text-slate-600">Kulüp Yönetimi</p>
       </div>
     </div>

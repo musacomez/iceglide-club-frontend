@@ -41,7 +41,7 @@ export function PwaInstallFooter() {
 
     if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
       void navigator.serviceWorker.register('/iceglide-sw.js').catch((error: unknown) => {
-        console.warn('IceGlide çevrimdışı ekranı kaydedilemedi.', error);
+        console.warn('Atak Buz Sporları çevrimdışı ekranı kaydedilemedi.', error);
       });
     }
 
@@ -75,9 +75,9 @@ export function PwaInstallFooter() {
       <Button type="button" variant="ghost" className="min-h-11" onClick={install}>
         Uygulamayı Kur
       </Button>
-      <dialog ref={guide} aria-labelledby="iceglide-install-title"
+      <dialog ref={guide} aria-labelledby="atak-install-title"
         className="fixed inset-0 m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl bg-white p-5 text-left text-slate-900 shadow-popover backdrop:bg-slate-900/50">
-        <h2 id="iceglide-install-title" className="text-lg font-semibold">IceGlide’ı ana ekrana ekle</h2>
+        <h2 id="atak-install-title" className="text-lg font-semibold">Atak Buz Sporları’nı ana ekrana ekle</h2>
         {appleMobile ? (
           <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-slate-700">
             <li>Bu sayfayı Safari’de aç.</li>

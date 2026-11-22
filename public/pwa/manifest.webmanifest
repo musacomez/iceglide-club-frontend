@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "IceGlide Club",
-  "short_name": "IceGlide",
-  "description": "IceGlide Buz Pateni Kulübü Yönetim Sistemi",
+  "name": "Atak Buz Sporları",
+  "short_name": "Atak Buz Sporları",
+  "description": "Atak Buz Sporları Kulüp Yönetim Sistemi",
   "lang": "tr",
   "start_url": "/",
   "scope": "/",

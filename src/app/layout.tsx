@@ -5,11 +5,11 @@ import { PwaInstallFooter } from '@/components/layout/PwaInstallFooter';
 import { ToastProvider } from '@/components/ui/Toast';
 
 export const metadata: Metadata = {
-  title: 'IceGlide Club',
-  description: 'IceGlide Buz Pateni Kulübü Yönetim Sistemi',
+  title: 'Atak Buz Sporları',
+  description: 'Atak Buz Sporları Kulüp Yönetim Sistemi',
   manifest: '/pwa/manifest.webmanifest',
   icons: { apple: '/pwa/apple-touch-icon.png' },
-  appleWebApp: { capable: true, title: 'IceGlide', statusBarStyle: 'default' },
+  appleWebApp: { capable: true, title: 'Atak Buz Sporları', statusBarStyle: 'default' },
 };
 
 export const viewport: Viewport = { themeColor: '#2547df' };
