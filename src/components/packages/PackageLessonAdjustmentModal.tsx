@@ -65,11 +65,13 @@ export function PackageLessonAdjustmentModal({ studentId, pack, onClose, onSaved
   return (
     <Modal open onClose={close} title="Ders Hakkını Düzenle">
       <form onSubmit={submit} className="flex flex-col gap-4" aria-busy={saving}>
-        <p className="text-sm text-slate-700">{pack.package_type_name} · Kalan ders: {pack.remaining_lessons}</p>
+        <p className="text-sm text-slate-700">
+          {pack.package_type_name} · {pack.package_number || `Paket #${pack.id}`} · Kalan ders: {pack.remaining_lessons}
+        </p>
         <Select name="lesson-adjustment-operation" label="İşlem" value={operation} disabled={saving}
           onChange={(event) => setOperation(event.target.value)}>
           <option value="add">Ders hakkı ekle</option>
-          <option value="remove">Ders hakkı düş</option>
+          {pack.remaining_lessons > 0 && <option value="remove">Ders hakkı düş</option>}
         </Select>
         <Input name="lesson-adjustment-quantity" type="number" label="Ders adedi" required min={1} step={1}
           max={operation === 'remove' ? pack.remaining_lessons : undefined} value={quantity} readOnly={saving}

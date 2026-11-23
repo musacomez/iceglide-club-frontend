@@ -15,6 +15,13 @@ import { ApiError } from '@/lib/api/client';
 import type { PackageItem } from '@/types/api';
 import { formatDate } from '@/lib/utils/format';
 
+function packageDisplayStatus(pack: PackageItem, today: string) {
+  if (pack.status !== 'active') return pack.status;
+  if (pack.remaining_lessons <= 0) return 'completed';
+  if (pack.expires_at && pack.expires_at.slice(0, 10) < today) return 'expired';
+  return 'active';
+}
+
 export function PackagesList({
   studentId, title = 'Paketler', canAssign = false, canAdjustLessons = false,
 }: { studentId: number; title?: string; canAssign?: boolean; canAdjustLessons?: boolean }) {
@@ -65,6 +72,20 @@ export function PackagesList({
 
   const isLoading = loading || loadedStudentId !== studentId;
   const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Istanbul' }).format(new Date());
+  const current: PackageItem[] = [];
+  const history: PackageItem[] = [];
+  for (const pack of rows ?? []) {
+    const status = packageDisplayStatus(pack, today);
+    if (pack.remaining_lessons <= 0 || ['completed', 'expired', 'cancelled'].includes(status)) {
+      history.push(pack);
+    } else {
+      current.push(pack);
+    }
+  }
+  const sections = [
+    { title: 'Güncel Paketler', packages: current, empty: 'Güncel paket yok.' },
+    { title: 'Geçmiş Paket Kullanımları', packages: history, empty: 'Geçmiş paket kaydı yok.' },
+  ];
 
   return (
     <Card>
@@ -81,38 +102,52 @@ export function PackagesList({
         <EmptyState title="Paket bulunamadı" description="Bu öğrenciye ait kayıtlı paket yok." />
       )}
       {!isLoading && !error && rows && rows.length > 0 && (
-        <div className="divide-y divide-slate-100">
-          {rows.map((p) => {
-            const totalLessons = p.total_lessons || p.package_type_lesson_count;
-            return (
-              <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-                <div>
-                  <p className="text-sm font-medium text-slate-900">{p.package_type_name}</p>
-                  <p className="text-xs text-slate-500">
-                    {p.package_number ? `${p.package_number} · ` : ''}Satın alma: {formatDate(p.purchased_at)}
-                    {p.expires_at ? ` · Bitiş: ${formatDate(p.expires_at)}` : ''}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-slate-900">{p.remaining_lessons} ders kaldı</p>
-                    {typeof totalLessons === 'number' && totalLessons > 0 && (
-                      <p className="text-xs text-slate-400">
-                        {canAdjustLessons ? `Paket kapsamı: ${totalLessons} ders` : `/ ${totalLessons} toplam`}
-                      </p>
-                    )}
-                  </div>
-                  <PackageStatusBadge status={p.status} />
-                  {canAdjustLessons && p.status === 'active' && (!p.expires_at || p.expires_at.slice(0, 10) >= today) && (
-                    <Button type="button" size="sm" variant="secondary" onClick={() => setAdjusting(p)}
-                      aria-label={`${p.package_type_name} ders hakkını düzenle`}>
-                      Ders Hakkını Düzenle
-                    </Button>
-                  )}
-                </div>
+        <div className="divide-y divide-slate-200">
+          {sections.map((section) => (
+            <section key={section.title} aria-label={section.title}>
+              <h3 className="bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-800">{section.title}</h3>
+              {section.packages.length === 0 && (
+                <p className="px-5 py-4 text-sm text-slate-500">{section.empty}</p>
+              )}
+              <div className="divide-y divide-slate-100">
+                {section.packages.map((p) => {
+                  const totalLessons = p.total_lessons || p.package_type_lesson_count;
+                  const packageNumber = p.package_number || `Paket #${p.id}`;
+                  const mayAdjust = canAdjustLessons && p.status === 'active' &&
+                    (!p.expires_at || p.expires_at.slice(0, 10) >= today);
+                  const action = p.remaining_lessons === 0 ? 'Ders Hakkı Ekle' : 'Ders Hakkını Düzenle';
+                  return (
+                    <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">{p.package_type_name}</p>
+                        <p className="text-xs text-slate-500">
+                          {packageNumber} · Satın alma: {formatDate(p.purchased_at)}
+                          {p.expires_at ? ` · Bitiş: ${formatDate(p.expires_at)}` : ''}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-slate-900">{p.remaining_lessons} ders kaldı</p>
+                          {typeof totalLessons === 'number' && totalLessons > 0 && (
+                            <p className="text-xs text-slate-400">
+                              {canAdjustLessons ? `Paket kapsamı: ${totalLessons} ders` : `/ ${totalLessons} toplam`}
+                            </p>
+                          )}
+                        </div>
+                        <PackageStatusBadge status={packageDisplayStatus(p, today)} />
+                        {mayAdjust && (
+                          <Button type="button" size="sm" variant="secondary" onClick={() => setAdjusting(p)}
+                            aria-label={`${p.package_type_name}, ${packageNumber} - ${action}`}>
+                            {action}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            </section>
+          ))}
         </div>
       )}
       {canAssign && assigning && (

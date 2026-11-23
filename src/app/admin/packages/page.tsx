@@ -15,12 +15,18 @@ export default function AdminPackagesPage() {
     <RoleGuard role="admin" title="Paketler">
       <div className="mb-5"><PackageTypesPanel /></div>
       <p className="mb-4 text-sm text-slate-500">
-        Paketlerini görüntülemek veya paket atamak için bir öğrenci seçin.
+        Paket atamak veya ders hakkını düzenlemek için bir öğrenci seçin.
       </p>
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[320px_1fr]">
         <StudentPicker selectedId={student?.id ?? null} onSelect={setStudent} />
         {student ? (
-          <PackagesList key={student.id} studentId={student.id} title={`${student.full_name} - Paketler`} canAssign={student.status === 'active'} />
+          <PackagesList
+            key={student.id}
+            studentId={student.id}
+            title={`${student.full_name} - Paketler`}
+            canAssign={student.status === 'active'}
+            canAdjustLessons
+          />
         ) : (
           <EmptyState title="Bir öğrenci seçin" description="Paketlerini görmek için soldaki listeden bir öğrenci seçin." />
         )}
